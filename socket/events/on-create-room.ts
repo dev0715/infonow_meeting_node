@@ -13,5 +13,5 @@ export const createRoom = (socket: Socket, rooms: SocketRoom, res: SocketData) =
 	Redis.getInstance().set(res.meetingId, JSON.stringify(res.data));
 	socket.join(res.meetingId);
 	rooms[res.meetingId] = res.meetingId;
-	socket.emit(IOEvents.ROOM_JOIN);
+	socket.emit(IOEvents.CALL_ON_WAIT);
 };

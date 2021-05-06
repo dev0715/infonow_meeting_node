@@ -48,7 +48,3 @@ export namespace Configurations {
 		email: process.env.ERROR_REPORTING_EMAIL,
 	};
 }
-
-export const SocketConfig = {
-	port: 4000,
-};

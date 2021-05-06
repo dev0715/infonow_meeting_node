@@ -2,10 +2,11 @@ import express from "express"; // using express
 import http from "http";
 import { Socket } from "socket.io";
 const socketIO = require("socket.io");
-import { Redis } from "../redis";
-import { SocketConfig } from "../configs/config-main";
+import Configs from "../configs";
 import { IOEvents, createRoom, joinRoom, answerCall, startCall, createIceEventData, disconnect } from "./events";
 import { SocketData, SocketRoom } from "./models";
+
+const socketConfig = Configs!.WSServerConfigurations;
 
 export const StartSocketServer = () => {
 	let app = express();
@@ -50,7 +51,7 @@ export const StartSocketServer = () => {
 		});
 	});
 
-	const port = process.env.PORT || SocketConfig.port; // setting the port
+	const port = socketConfig.port; // setting the port
 
 	server.listen(port);
 };
