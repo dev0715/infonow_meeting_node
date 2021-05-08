@@ -6,6 +6,7 @@ import { Participant } from '../../../sequelize/models/Participant';
 import { SequelizeAttributes } from '../../../sequelize/types';
 import { User } from '../../../sequelize/models/User';
 import { Meeting } from '../../../sequelize/models/Meeting';
+import { NotFoundError } from '../../utils/errors';
 
 export class MeetingUtils {
 	static async getAllMeetings(
@@ -55,25 +56,25 @@ export class MeetingUtils {
 	}
 
 	static async newMeeting(
-		meetingData: NewMeetingSchemaType,
+		meeting: NewMeetingSchemaType,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | any | boolean> {
-		await NewMeetingSchema.validateAsync(meetingData);
+		await NewMeetingSchema.validateAsync(meeting);
 
-		let meetingUser = await User.findOne({
+		let users = await User.findAll({
 			where: {
-				userId: meetingData.createdBy,
-			},
-		});
+				userId: [meeting.createdBy, meeting.guest]
+			}
+		})
+		
+		let meetingUser = users.find(x => x.userId === meeting.createdBy)
+		let guestUser = users.find(x => x.userId === meeting.guest)
 
-		let guestUser = await User.findOne({
-			where: {
-				userId: meetingData.guest,
-			},
-		});
-
+		if (!meetingUser) throw new NotFoundError("User not found")
+		if(!guestUser) throw new NotFoundError("User not found")
+		
 		let newMeeting = await Meeting.create({
-			...meetingData,
+			...meeting,
 			createdBy: meetingUser!._userId,
 		} as any);
 
@@ -90,6 +91,6 @@ export class MeetingUtils {
 
 		let participants = await Participant.bulkCreate(participantsData);
 
-		return this.getMeeting(newMeeting._meetingId);
+		return this.getMeeting(newMeeting._meetingId, returns);
 	}
 }
