@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { ApplicationError, BadRequestError, DatabaseError, MissingParamError, UserFacingError } from '../utils/errors'
-import { DataResponse } from '../utils/http-response'
+import { DataResponse, LocaleDataResponse } from '../utils/http-response'
 import { Logger } from '../utils/logger'
 import _ from 'lodash'
 import { JsonWebTokenError } from 'jsonwebtoken'
@@ -86,6 +86,13 @@ function CanHandleKnownFatalErrors(err: FataError, res: Response): false | Objec
 		const statusCode = 400
 		Logger.debug(ErrorTag('DEBUG'), err.error)
 		return DataResponse(res, statusCode, undefined, message)
+	}
+
+	if (err.error.isJoi) {
+		let msg = err.error.localeMessage;
+		const statusCode = 400
+		Logger.debug(ErrorTag('DEBUG'), err.error)
+		return LocaleDataResponse(res, statusCode, undefined, msg)
 	}
 
 	return false
