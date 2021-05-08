@@ -6,6 +6,7 @@ import { Logger, LogType } from "./app/utils/logger";
 import * as App from "./app";
 
 import { StartSocketServer } from "./socket";
+import { initLocalization } from './app/locales'
 
 require("source-map-support").install();
 
@@ -21,17 +22,21 @@ export async function Start(): Promise<boolean> {
 		// Initilizing Connection Pool
 		await ConnectionPool.init();
 
-		// Enabling Types of Logs Printed
-		Logger.logConfig = [LogType.Error, LogType.Debug, LogType.Success, LogType.Info];
-
+		// Initializing Localization
+		initLocalization()
+		
 		Logger.infoBright("* Attempting to start the Server");
 		Logger.info("* This process will start HTTP server...");
-
+		
 		// Starting Http Server
 		let expressApp = App.create(HttpServerConfig);
 		App.start(expressApp);
 
 		severStarted = true;
+
+		// Enabling Types of Logs Printed
+		Logger.logConfig = [LogType.Error, LogType.Debug, LogType.Success, LogType.Info];
+
 	} catch (err) {
 		Logger.fatalError("* -------------------------------------------------------- *");
 		Logger.fatalError("|                Failed to start the Server                |");

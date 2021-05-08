@@ -11,6 +11,8 @@ import chalk from 'chalk'
 import { getSSLConfigurations } from '../configs/ssl-configs'
 import { Logger } from './utils/logger';
 
+import i18n from 'i18n';
+
 export function create(config: any): any {
 	// Server settings
 	const expressApp = express()
@@ -18,6 +20,9 @@ export function create(config: any): any {
 	expressApp.set('port', config.port)
 	expressApp.set('hostname', config.host)
 	expressApp.set('sslEnabled', config.sslEnabled)
+
+	// Initializing Localization
+	expressApp.use(i18n.init)
 
 	// Returns middleware that parses json
 	// parse application/x-www-form-urlencoded
