@@ -1,7 +1,6 @@
 "use strict";
 
 import GlobalConfig from "./configs";
-import { ConnectionPool } from "./database";
 import { Logger, LogType } from "./app/utils/logger";
 import * as App from "./app";
 import { sequelize } from "./sequelize";
@@ -13,7 +12,9 @@ require("source-map-support").install();
 export async function Start(): Promise<boolean> {
 	let severStarted = false;
 	try {
-		Logger.successBold("* -------------------------------------------------------- *");
+		Logger.successBold(
+			"* -------------------------------------------------------- *"
+		);
 		Logger.successBold(
 			"|              Attempting to start the Server              |"
 		);

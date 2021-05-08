@@ -2,5 +2,7 @@
 	"Hello World": "Hello World",
     "Hello": "Hello",
     "No meeting found": "No meeting found",
-    "%s is required":"%s is required"
+    "%s is required":"%s is required",
+    "User not found":"User not found",
+    "Guest not found":"Guest not found"
 }
