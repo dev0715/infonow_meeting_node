@@ -1,14 +1,18 @@
-import { NewMeetingSchema } from "../../../sequelize/validation-schema";
-import { Participant } from "../../../sequelize/models/Participant";
-import { SequelizeAttributes } from "../../../sequelize/types";
-import { User } from "../../../sequelize/models/User";
-import { Meeting } from "../../../sequelize/models/Meeting";
+import {
+	NewMeetingSchema,
+	NewMeetingSchemaType,
+} from '../../../sequelize/validation-schema';
+import { Participant } from '../../../sequelize/models/Participant';
+import { SequelizeAttributes } from '../../../sequelize/types';
+import { User } from '../../../sequelize/models/User';
+import { Meeting } from '../../../sequelize/models/Meeting';
 
 export class MeetingUtils {
 	static async getAllMeetings(
 		userId?: string,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting[]> {
+
 		let whereObj = {};
 		if (userId) {
 			whereObj = {
@@ -29,9 +33,12 @@ export class MeetingUtils {
 	}
 
 	static async getMeeting(
-		meetingId: string,
+		meetingId: string | number,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | null> {
+
+		let meetingIdType = typeof meetingId === 'number' ? '_meetingId' : 'meetingId';
+
 		let options = {
 			include: [
 				{
@@ -40,7 +47,7 @@ export class MeetingUtils {
 				},
 			],
 			where: {
-				meetingId: meetingId,
+				[meetingIdType]: meetingId,
 			},
 		};
 		let meeting = await Meeting.findAllSafe<Meeting>(returns, options);
@@ -48,7 +55,7 @@ export class MeetingUtils {
 	}
 
 	static async newMeeting(
-		meetingData: Meeting,
+		meetingData: NewMeetingSchemaType,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | any | boolean> {
 		await NewMeetingSchema.validateAsync(meetingData);
@@ -67,18 +74,22 @@ export class MeetingUtils {
 
 		let newMeeting = await Meeting.create({
 			...meetingData,
-			createdBy: meetingUser?._userId,
-		});
-		let meetingParticipant = await Participant.create({
-			meetingId: newMeeting._meetingId,
-			participantId: meetingUser?._userId,
-		});
+			createdBy: meetingUser!._userId,
+		} as any);
 
-		let guestParticipant = await Participant.create({
-			meetingId: newMeeting._meetingId,
-			participantId: guestUser?._userId,
-		});
+		let participantsData: any = [
+			{
+				meetingId: newMeeting._meetingId,
+				participantId: meetingUser!._userId
+			},
+			{
+				meetingId: newMeeting._meetingId,
+				participantId: guestUser?._userId
+			},
+		];
 
-		return this.getMeeting(newMeeting.meetingId);
+		let participants = await Participant.bulkCreate(participantsData);
+
+		return this.getMeeting(newMeeting._meetingId);
 	}
 }

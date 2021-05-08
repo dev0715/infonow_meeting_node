@@ -13,9 +13,7 @@ require("source-map-support").install();
 export async function Start(): Promise<boolean> {
 	let severStarted = false;
 	try {
-		Logger.successBold(
-			"* -------------------------------------------------------- *"
-		);
+		Logger.successBold("* -------------------------------------------------------- *");
 		Logger.successBold(
 			"|              Attempting to start the Server              |"
 		);
