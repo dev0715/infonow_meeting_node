@@ -3,6 +3,6 @@ import { MeetingsCtrl } from "../../controllers";
 
 const router = express.Router();
 
-router.get("/meetings/:userId", MeetingsCtrl.getAllMeetings);
+router.get("/:userId/meetings", MeetingsCtrl.getAllUserMeetings);
 
 export default router;

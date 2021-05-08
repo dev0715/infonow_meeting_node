@@ -48,13 +48,37 @@ export class MeetingUtils {
 	}
 
 	static async newMeeting(
-		meetingData: any,
+		meetingData: Meeting,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | any | boolean> {
 		await NewMeetingSchema.validateAsync(meetingData);
 
-		let newMeeting = await Meeting.create(meetingData);
+		let meetingUser = await User.findOne({
+			where: {
+				userId: meetingData.createdBy,
+			},
+		});
 
-		return newMeeting;
+		let guestUser = await User.findOne({
+			where: {
+				userId: meetingData.guest,
+			},
+		});
+
+		let newMeeting = await Meeting.create({
+			...meetingData,
+			createdBy: meetingUser?._userId,
+		});
+		let meetingParticipant = await Participant.create({
+			meetingId: newMeeting._meetingId,
+			participantId: meetingUser?._userId,
+		});
+
+		let guestParticipant = await Participant.create({
+			meetingId: newMeeting._meetingId,
+			participantId: guestUser?._userId,
+		});
+
+		return this.getMeeting(newMeeting.meetingId);
 	}
 }

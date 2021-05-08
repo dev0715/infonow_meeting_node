@@ -2,7 +2,8 @@
 import { NextFunction, Request, Response } from "express";
 import { DataResponse } from "../../utils/http-response";
 import { MeetingUtils } from "../../services";
-import { MissingParamError, NotFoundError } from "../../utils/errors";
+import { NotFoundError } from "../../utils/errors";
+import { Meeting } from "../../../sequelize/models/Meeting";
 
 export async function getAllMeetings(
 	req: Request,
@@ -12,7 +13,7 @@ export async function getAllMeetings(
 	try {
 		const meetings = await MeetingUtils.getAllMeetings();
 		if (meetings.length > 0) return DataResponse(res, 200, meetings);
-		throw new NotFoundError("No meeting found!");
+		throw new NotFoundError("No meeting found");
 	} catch (err) {
 		// Handle Exception
 		return next(err);
@@ -29,7 +30,7 @@ export async function getAllUserMeetings(
 		console.log("userId", req.params.userId);
 		const meetings = await MeetingUtils.getAllMeetings(req.params.userId);
 		if (meetings.length > 0) return DataResponse(res, 200, meetings);
-		throw new NotFoundError("No meeting found!");
+		throw new NotFoundError("No meeting found");
 	} catch (err) {
 		// Handle Exception
 		return next(err);
@@ -43,12 +44,9 @@ export async function getMeeting(
 	next: NextFunction
 ) {
 	try {
-		if (!req.params.meetingId) {
-			throw new MissingParamError("meetingId is missing");
-		}
 		const meeting = await MeetingUtils.getMeeting(req.params.meetingId);
 		if (meeting) return DataResponse(res, 200, meeting);
-		throw new NotFoundError("No meeting found!");
+		throw new NotFoundError("No meeting found");
 	} catch (err) {
 		// Handle Exception
 		return next(err);
@@ -61,10 +59,10 @@ export async function newMeeting(
 	next: NextFunction
 ) {
 	try {
-		console.log("new Meeting", req.body);
-		const meeting = await MeetingUtils.newMeeting(req.body);
+		const meeting = await MeetingUtils.newMeeting(req.body as Meeting);
 		if (meeting) return DataResponse(res, 200, meeting);
-		throw new NotFoundError("No meeting found!");
+
+		throw new NotFoundError("No meeting found");
 	} catch (err) {
 		// Handle Exception
 		return next(err);

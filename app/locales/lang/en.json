@@ -1,10 +1,6 @@
 {
 	"Hello World": "Hello World",
     "Hello": "Hello",
-    "userId is required": "userId is required",
-    "participant is required":"participant is required",
-    "date is required":"date is required",
-    "meetingId is required":"meetingId is required",
-    "status is required":"status is required",
-    "message is required":"message is required"
+    "No meeting found": "No meeting found",
+    "%s is required":"%s is required"
 }
