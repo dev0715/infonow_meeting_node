@@ -11,3 +11,18 @@ export function DataResponse(res: Response, statusCode: number, data?: any, mess
 	res.status(200).json(responseJson)
 	return responseJson
 }
+
+export function LocaleDataResponse(res: Response, statusCode: number, data?: any, message?: TranslationMessage, errors?: any) {
+	
+	let msg = message ? res.__(...message) : undefined;
+
+	const responseJson = {
+		status: statusCode,
+		message: msg,
+		data,
+		errors
+	}
+
+	res.status(200).json(responseJson)
+	return responseJson
+}
