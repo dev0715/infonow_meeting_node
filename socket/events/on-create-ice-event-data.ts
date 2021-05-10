@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { SocketData, SocketRoom } from "../models";
+import { SocketData } from "../models";
 import { IOEvents } from "./index";
 
 export const createIceEventData = (socket: Socket, res: SocketData) => {

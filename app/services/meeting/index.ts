@@ -1,31 +1,37 @@
 import {
 	NewMeetingSchema,
 	NewMeetingSchemaType,
+	updateMeetingSchemaType,
+	CancelMeetingSchema,
+	RescheduleMeetingSchema,
 } from "../../../sequelize/validation-schema";
 import { Participant } from "../../../sequelize/models/Participant";
 import { SequelizeAttributes } from "../../../sequelize/types";
 import { User } from "../../../sequelize/models/User";
 import { Meeting } from "../../../sequelize/models/Meeting";
-import { NotFoundError } from "../../utils/errors";
+import { BadRequestError, NotFoundError } from "../../utils/errors";
+import { a } from "../../locales";
 
 export class MeetingUtils {
-	static async getAllMeetings(
-		userId?: string,
+	static async getAllUserMeetings(
+		userId: string,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting[]> {
-		let whereObj = {};
-		if (userId) {
-			whereObj = {
-				participantId: userId,
-			};
-		}
+		let user = await User.findOne({
+			where: {
+				userId: userId,
+			},
+		});
 		let options = {
 			include: [
 				{
 					model: Participant,
 					include: [User],
-					where: whereObj,
+					where: {
+						participantId: user?._userId,
+					},
 				},
+				User,
 			],
 		};
 		let meetings = await Meeting.findAllSafe<Meeting[]>(returns, options);
@@ -51,17 +57,14 @@ export class MeetingUtils {
 				[meetingIdType]: meetingId,
 			},
 		};
-		let meeting = await Meeting.findAllSafe<Meeting>(
-			SequelizeAttributes.WithoutIndexes,
-			options
-		);
+		let meeting = await Meeting.findOneSafe<Meeting>(returns, options);
 		return meeting;
 	}
 
 	static async newMeeting(
 		meeting: NewMeetingSchemaType,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | any | boolean> {
+	): Promise<Meeting | null> {
 		await NewMeetingSchema.validateAsync(meeting);
 
 		let users = await User.findAll({
@@ -97,5 +100,58 @@ export class MeetingUtils {
 		let participants = await Participant.bulkCreate(participantsData);
 
 		return this.getMeeting(newMeeting._meetingId, returns);
+	}
+
+	private static async updateMeetingCore(meeting: Meeting): Promise<any> {
+		return await Meeting.update(meeting, {
+			where: {
+				meetingId: meeting.meetingId,
+			},
+		});
+	}
+
+	static async acceptOrRejectMeeting(
+		meeting: Meeting,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
+	): Promise<Meeting | null> {
+		let tempMeeting = await this.getMeeting(meeting.meetingId);
+		if (!tempMeeting) {
+			throw new BadRequestError(a("No meeting found", ""));
+		}
+		console.log("temp meet", tempMeeting);
+		if (tempMeeting?.status == "pending") {
+			await this.updateMeetingCore(meeting);
+		} else {
+			throw new BadRequestError(
+				a("This meeting cannot be %s", meeting.status)
+			);
+		}
+
+		return this.getMeeting(meeting.meetingId, returns);
+	}
+
+	static async cancelOrRescheduleMeeting(
+		meeting: Meeting,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
+	): Promise<Meeting | any | boolean> {
+		let tempMeeting = await this.getMeeting(meeting.meetingId);
+		if (!tempMeeting) {
+			throw new BadRequestError(a("No meeting found", ""));
+		}
+
+		if (tempMeeting?.status != "accepted") {
+			throw new BadRequestError(
+				a("This meeting cannot be %s", meeting.status)
+			);
+		}
+
+		if (meeting.status == "rescheduled") {
+			await RescheduleMeetingSchema.validateAsync(meeting);
+		} else if (meeting.status == "cancelled") {
+			await CancelMeetingSchema.validateAsync(meeting);
+		}
+
+		await this.updateMeetingCore(meeting);
+		return this.getMeeting(meeting.meetingId, returns);
 	}
 }
