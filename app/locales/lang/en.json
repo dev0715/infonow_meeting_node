@@ -11,5 +11,5 @@
     "meeting is %s":"meeting is %s",
     "meeting already exists":"meeting already exists",
     "invalid participant":"invalid participant",
-    "already joined on another device":"already joined on another device"
+    "already joined on another client":"already joined on another client"
 }

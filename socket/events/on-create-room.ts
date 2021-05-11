@@ -8,8 +8,8 @@ import {
 	joinRoom,
 	answerCall,
 	startCall,
+	endCall,
 	createIceEventData,
-	disconnect,
 } from "./index";
 
 export const createRoom = async (
@@ -41,10 +41,11 @@ export const createRoom = async (
 		offer: res.data,
 	};
 	Redis.getInstance().set(res.meetingId, JSON.stringify(meetingOffer));
+	//ATTACH MEETING ID WITH SOCKET
+	socket.meetingId = res.meetingId;
+	socket.join(socket.meetingId);
 
-	socket.join(res.meetingId);
-
-	rooms[res.meetingId] = res.meetingId;
+	rooms[socket.meetingId] = socket.meetingId;
 
 	socket.emit(IOEvents.CALL_ON_WAIT);
 };
@@ -56,7 +57,7 @@ async function checkMeeting(socket: Socket, res: SocketData): Promise<Boolean> {
 		(x) => x.user.userId === res.userId
 	);
 
-	console.log("Valid_User", validUser);
+	// console.log("Valid_User", validUser);
 
 	if (meeting == null) {
 		let message = socket.t("No meeting found");
@@ -75,6 +76,7 @@ async function checkMeeting(socket: Socket, res: SocketData): Promise<Boolean> {
 		socket.emit(IOEvents.INVALID_PARTICIPANT, { message: message });
 		return false;
 	}
+	//ATTACH USER ID WITH SOCKET//
 	if (res.userId) {
 		socket.userId = res.userId;
 	}
@@ -91,15 +93,16 @@ function attachEvents(socket: Socket, rooms: SocketRoom) {
 		answerCall(socket, res);
 	});
 
-	socket.on(IOEvents.START_CALL, (res: SocketData) => {
-		startCall(socket, res);
+	socket.on(IOEvents.START_CALL, () => {
+		startCall(socket);
+	});
+
+	socket.on(IOEvents.END_CALL, () => {
+		console.log(IOEvents.END_CALL);
+		endCall(socket, rooms);
 	});
 
 	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res: SocketData) => {
 		createIceEventData(socket, res);
-	});
-
-	socket.on(IOEvents.DISCONNECT, (res: SocketData) => {
-		disconnect(socket, rooms, res);
 	});
 }

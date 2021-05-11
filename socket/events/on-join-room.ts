@@ -22,11 +22,13 @@ export const joinRoom = (
 		}
 		let data = JSON.parse(reply) as SocketOffer;
 		if (socket.userId == data.userId) {
-			let message = socket.t("already joined on another device");
+			let message = socket.t("already joined on another client");
 			socket.emit(IOEvents.ALREADY_JOINED, { message: message });
 		} else {
-			socket.join(res.meetingId);
+			socket.meetingId = res.meetingId;
+			socket.join(socket.meetingId);
 			socket.emit(IOEvents.ROOM_JOIN, data.offer);
+			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER);
 		}
 	});
 };

@@ -5,7 +5,7 @@ import { Socket } from "socket.io";
 import { t } from "../app/locales";
 const socketIO = require("socket.io");
 import Configs from "../configs";
-import { IOEvents, createRoom } from "./events";
+import { IOEvents, createRoom, endCall } from "./events";
 import { SocketData, SocketRoom } from "./models";
 
 const socketConfig = Configs!.WSServerConfigurations;
@@ -15,6 +15,7 @@ declare module "socket.io" {
 		t(message: string, ...args: any): string;
 		locale: string;
 		userId?: string;
+		meetingId?: string;
 	}
 }
 
@@ -55,6 +56,10 @@ export const StartSocketServer = () => {
 
 		socket.on(IOEvents.CREATE_ROOM, (res: SocketData) => {
 			createRoom(socket, rooms, res);
+		});
+		socket.on(IOEvents.DISCONNECT, () => {
+			console.log(IOEvents.DISCONNECT);
+			endCall(socket, rooms);
 		});
 	});
 
