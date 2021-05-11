@@ -10,6 +10,10 @@ import {
 	startCall,
 	endCall,
 	createIceEventData,
+	muteAudio,
+	unmuteAudio,
+	muteVideo,
+	unmuteVideo,
 } from "./index";
 
 export const createRoom = async (
@@ -104,5 +108,21 @@ function attachEvents(socket: Socket, rooms: SocketRoom) {
 
 	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res: SocketData) => {
 		createIceEventData(socket, res);
+	});
+
+	socket.on(IOEvents.MUTE_AUDIO, () => {
+		muteAudio(socket);
+	});
+
+	socket.on(IOEvents.UNMUTE_AUDIO, () => {
+		unmuteAudio(socket);
+	});
+
+	socket.on(IOEvents.MUTE_VIDEO, () => {
+		muteVideo(socket);
+	});
+
+	socket.on(IOEvents.UNMUTE_VIDEO, () => {
+		unmuteVideo(socket);
 	});
 }

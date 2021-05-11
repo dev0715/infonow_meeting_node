@@ -4,6 +4,10 @@ export * from "./on-answer-call";
 export * from "./on-start-call";
 export * from "./on-create-ice-event-data";
 export * from "./on-disconnect";
+export * from "./on-mute-audio";
+export * from "./on-unmute-audio";
+export * from "./on-mute-video";
+export * from "./on-unmute-video";
 
 export const IOEvents = {
 	CONNECT: "CONNECT",
@@ -25,4 +29,8 @@ export const IOEvents = {
 	CREATE_ICE_EVENT_DATA: "CREATE_ICE_EVENT_DATA",
 	MEETING_NOT_FOUND: "MEETING_NOT_FOUND",
 	MEETING_NOT_ACTIVE: "MEETING_NOT_ACTIVE",
+	MUTE_VIDEO: "MUTE_VIDEO",
+	UNMUTE_VIDEO: "UNMUTE_VIDEO",
+	MUTE_AUDIO: "MUTE_AUDIO",
+	UNMUTE_AUDIO: "UNMUTE_AUDIO",
 };
