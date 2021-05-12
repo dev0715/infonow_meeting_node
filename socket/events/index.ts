@@ -3,11 +3,13 @@ export * from "./on-join-room";
 export * from "./on-answer-call";
 export * from "./on-start-call";
 export * from "./on-create-ice-event-data";
-export * from "./on-disconnect";
+export * from "./on-end-call";
 export * from "./on-mute-audio";
 export * from "./on-unmute-audio";
 export * from "./on-mute-video";
 export * from "./on-unmute-video";
+export * from "./on-video-sharing";
+export * from "./on-screen-sharing";
 
 export const IOEvents = {
 	CONNECT: "CONNECT",
@@ -33,4 +35,6 @@ export const IOEvents = {
 	UNMUTE_VIDEO: "UNMUTE_VIDEO",
 	MUTE_AUDIO: "MUTE_AUDIO",
 	UNMUTE_AUDIO: "UNMUTE_AUDIO",
+	SCREEN_SHARING: "SCREEN_SHARING",
+	VIDEO_SHARING: "VIDEO_SHARING",
 };

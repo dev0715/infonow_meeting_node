@@ -8,5 +8,6 @@ export const endCall = (socket: Socket, rooms: SocketRoom) => {
 		socket.to(socket.meetingId).emit(IOEvents.END_CALL, socket.meetingId);
 		delete rooms[socket.meetingId];
 		Redis.getInstance().del(socket.meetingId);
+		socket.leave(socket.meetingId);
 	}
 };

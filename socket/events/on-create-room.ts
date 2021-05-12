@@ -14,6 +14,8 @@ import {
 	unmuteAudio,
 	muteVideo,
 	unmuteVideo,
+	onScreenSharing,
+	onVideoSharing,
 } from "./index";
 
 export const createRoom = async (
@@ -124,5 +126,13 @@ function attachEvents(socket: Socket, rooms: SocketRoom) {
 
 	socket.on(IOEvents.UNMUTE_VIDEO, () => {
 		unmuteVideo(socket);
+	});
+
+	socket.on(IOEvents.VIDEO_SHARING, () => {
+		onVideoSharing(socket);
+	});
+
+	socket.on(IOEvents.SCREEN_SHARING, () => {
+		onScreenSharing(socket);
 	});
 }
