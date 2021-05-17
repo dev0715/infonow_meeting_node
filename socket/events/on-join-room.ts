@@ -1,9 +1,13 @@
 import { Socket } from "socket.io";
-import { SocketData, SocketRoom } from "../models";
+import { SocketData, SocketOffer, SocketRoom } from "../models";
 import { Redis } from "../../redis";
 import { IOEvents } from "./index";
 
-export const joinRoom = (socket: Socket, rooms: SocketRoom, res: SocketData) => {
+export const joinRoom = (
+	socket: Socket,
+	rooms: SocketRoom,
+	res: SocketData
+) => {
 	console.log(IOEvents.ROOM_JOIN, res.meetingId);
 
 	if (!rooms.hasOwnProperty(res.meetingId)) {
@@ -16,8 +20,15 @@ export const joinRoom = (socket: Socket, rooms: SocketRoom, res: SocketData) => 
 			socket.emit(IOEvents.ROOM_NOT_FOUND);
 			return;
 		}
-		let data = JSON.parse(reply);
-		socket.join(res.meetingId);
-		socket.emit(IOEvents.ROOM_JOIN, data);
+		let data = JSON.parse(reply) as SocketOffer;
+		if (socket.userId == data.userId) {
+			let message = socket.t("already joined on another client");
+			socket.emit(IOEvents.ALREADY_JOINED, { message: message });
+		} else {
+			socket.meetingId = res.meetingId;
+			socket.join(socket.meetingId);
+			socket.emit(IOEvents.ROOM_JOIN, data.offer);
+			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER);
+		}
 	});
 };
