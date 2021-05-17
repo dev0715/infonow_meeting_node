@@ -6,7 +6,7 @@ import { Participant } from '../../../sequelize/models/Participant';
 import { SequelizeAttributes } from '../../../sequelize/types';
 import { User } from '../../../sequelize/models/User';
 import { Meeting } from '../../../sequelize/models/Meeting';
-import { NotFoundError } from '../../utils/errors';
+import { NotFoundError } from '../../../sequelize/utils/errors';
 
 export class MeetingUtils {
 	static async getAllMeetings(

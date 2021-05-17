@@ -9,9 +9,20 @@ import routes from './routes'
 import https from 'https'
 import chalk from 'chalk'
 import { getSSLConfigurations } from '../configs/ssl-configs'
-import { Logger } from './utils/logger';
+import { Logger } from '../sequelize/utils/logger';
 
 import i18n from 'i18n';
+import { User } from '../sequelize'
+
+declare global{
+    namespace Express {
+        interface Request {
+			CurrentUser?: User,
+			__?: i18nAPI
+        }
+    }
+}
+
 
 export function create(config: any): any {
 	// Server settings

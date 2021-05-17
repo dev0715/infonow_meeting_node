@@ -1,8 +1,8 @@
 "use strict";
 import { NextFunction, Request, Response } from "express";
-import { DataResponse } from "../../utils/http-response";
+import { DataResponse } from "../../../sequelize/utils/http-response";
 import { MeetingUtils } from "../../services";
-import { NotFoundError } from "../../utils/errors";
+import { NotFoundError } from "../../../sequelize/utils/errors";
 import { Meeting } from "../../../sequelize/models/Meeting";
 
 export async function getAllMeetings(
@@ -59,7 +59,7 @@ export async function newMeeting(
 	next: NextFunction
 ) {
 	try {
-		const meeting = await MeetingUtils.newMeeting(req.body as Meeting);
+		const meeting = await MeetingUtils.newMeeting(req.body);
 		if (meeting) return DataResponse(res, 200, meeting);
 
 		throw new NotFoundError("No meeting found");

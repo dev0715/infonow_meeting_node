@@ -1,21 +1,20 @@
 "use strict";
 import PublicRouter from "./public";
-import { CoreHttpErrorHandler, RequestParameters } from "../controllers/errors";
-import { DataResponse } from "../utils/http-response";
+import { CoreHttpErrorHandler, RequestParameters } from "../../sequelize/middlewares/error";
+import { DataResponse } from "../../sequelize/utils/http-response";
 import express, { Request, Response, NextFunction, Router } from "express";
 import cors from "cors";
 import chalk from "chalk";
 import ApiRouter from "./api";
+import { User } from "../../sequelize/models/User";
 const PRINT_REQUESTED_URL = true;
 
-declare module "express" {
-	interface Request {}
-}
+
 
 export default ((): Router => {
 	const server = express.Router();
 
-	server.use("*", (req: Request, res: Response, next: NextFunction) => {
+	server.use("*", (req: Request, res: Response, next) => {
 		if (PRINT_REQUESTED_URL)
 			console.log(
 				`${req.method}: ${chalk.greenBright(

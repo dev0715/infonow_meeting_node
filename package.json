@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'test/**/*.ts' --exit",
-    "start": "nodemon index.ts"
+    "start": "nodemon index.ts",
+    "build": "npx tsc"
   },
   "author": "Wishaal Khan",
   "license": "ISC",
