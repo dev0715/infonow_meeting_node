@@ -2,7 +2,6 @@ import { Server, Socket } from "socket.io";
 import { IOEvents } from ".";
 import { User } from "../../sequelize";
 import { TokenCore } from "../../sequelize/middlewares/auth/token";
-import { Logger } from "../../sequelize/utils/logger";
 import { SocketData } from "../models";
 import { OnCreateRoom } from "./on-create-room";
 
@@ -16,8 +15,6 @@ export async function OnAuthorization(io: Server, socket: Socket, data: SocketDa
     // TODO: Authorize User and Join Room if user is valid
     try {
         if (data.authorization) {
-            console.log("USER AUTHORIZED")
-            
             let user = await authorizeUser(data.authorization);
             socket.userId = user.userId
             socket.user = user;
