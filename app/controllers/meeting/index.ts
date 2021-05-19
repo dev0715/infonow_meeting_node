@@ -49,7 +49,10 @@ export async function newMeeting(
 	next: NextFunction
 ) {
 	try {
-		const meeting = await MeetingUtils.newMeeting(req.body);
+		let newMeeting = req.body;
+		newMeeting.createdBy = req.CurrentUser?.userId;
+
+		const meeting = await MeetingUtils.newMeeting(newMeeting);
 		if (meeting) return DataResponse(res, 200, meeting);
 
 		throw new NotFoundError("Failed to add meeting, try again");
