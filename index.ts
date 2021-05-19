@@ -1,12 +1,11 @@
 "use strict";
 
 import GlobalConfig from "./configs";
-import { ConnectionPool } from "./database";
 import { Logger, LogType } from "./sequelize/utils/logger";
 import * as App from "./app";
 import { sequelize } from "./sequelize";
 import { StartSocketServer } from "./socket";
-import { initLocalization } from "./app/locales-old";
+import { initLocalization } from "./sequelize/locales";
 
 require("source-map-support").install();
 

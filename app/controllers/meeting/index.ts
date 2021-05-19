@@ -1,9 +1,13 @@
 "use strict";
 import { NextFunction, Request, Response } from "express";
-import { DataResponse } from '../../../sequelize/utils/http-response';
+import { DataResponse } from "../../../sequelize/utils/http-response";
 import { MeetingUtils } from "../../services";
-import { NotFoundError } from "../../../sequelize/utils/errors";
+import {
+	NotFoundError,
+	UnAuthorizedError,
+} from "../../../sequelize/utils/errors";
 import { Meeting } from "../../../sequelize/models/Meeting";
+import { a } from "../../../sequelize/locales";
 
 /**@urlParams  /:userId */
 export async function getAllUserMeetings(
@@ -12,7 +16,6 @@ export async function getAllUserMeetings(
 	next: NextFunction
 ) {
 	try {
-		console.log("userId", req.params.userId);
 		const meetings = await MeetingUtils.getAllUserMeetings(
 			req.params.userId
 		);
@@ -65,6 +68,7 @@ export async function acceptOrRejectMeeting(
 		let meeting: any = {
 			meetingId: req.params.meetingId,
 			status: req.params.type,
+			userId: req.CurrentUser?.userId,
 		};
 		const updatedMeeting = await MeetingUtils.acceptOrRejectMeeting(
 			meeting

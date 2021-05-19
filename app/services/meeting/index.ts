@@ -2,14 +2,17 @@ import {
 	NewMeetingSchema,
 	NewMeetingSchemaType,
 	RescheduleMeetingSchema,
-	CancelMeetingSchema
-} from '../../../sequelize/validation-schema';
-import { Participant } from '../../../sequelize/models/Participant';
-import { SequelizeAttributes } from '../../../sequelize/types';
-import { User } from '../../../sequelize/models/User';
-import { Meeting } from '../../../sequelize/models/Meeting';
-import { BadRequestError, NotFoundError } from '../../../sequelize/utils/errors'
-import { a } from '../../../sequelize/locales';
+	CancelMeetingSchema,
+} from "../../../sequelize/validation-schema";
+import { Participant } from "../../../sequelize/models/Participant";
+import { SequelizeAttributes } from "../../../sequelize/types";
+import { User } from "../../../sequelize/models/User";
+import { Meeting } from "../../../sequelize/models/Meeting";
+import {
+	BadRequestError,
+	NotFoundError,
+} from "../../../sequelize/utils/errors";
+import { a } from "../../../sequelize/locales";
 
 export class MeetingUtils {
 	static async getAllUserMeetings(
@@ -111,14 +114,23 @@ export class MeetingUtils {
 	}
 
 	static async acceptOrRejectMeeting(
-		meeting: Meeting,
+		meeting: any,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | null> {
 		let tempMeeting = await this.getMeeting(meeting.meetingId);
 		if (!tempMeeting) {
 			throw new BadRequestError(...a("No meeting found", ""));
 		}
-		console.log("temp meet", tempMeeting);
+
+		if (tempMeeting.user.userId == meeting.userId) {
+			throw new BadRequestError(
+				...a(
+					"You are not authorized to %s this meeting",
+					meeting.status
+				)
+			);
+		}
+
 		if (tempMeeting?.status == "pending") {
 			await this.updateMeetingCore(meeting);
 		} else {
