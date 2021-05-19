@@ -8,6 +8,7 @@ import { OnConnect } from "./events/on-connect";
 import { Logger } from "../sequelize/utils/logger";
 import { RedisClient } from "redis";
 import chalk from "chalk";
+import { User } from "../sequelize";
 
 const socketConfig = Configs!.WSServerConfigurations;
 const redisConfig = Configs!.RedisServerConfiguration;
@@ -18,6 +19,7 @@ declare module "socket.io" {
 		locale: string;
 		userId?: string;
 		meetingId?: string;
+		user?: User
 	}
 }
 
