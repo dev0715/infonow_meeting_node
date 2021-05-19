@@ -56,6 +56,7 @@ export class MeetingUtils {
 				[meetingIdType]: meetingId,
 			},
 		};
+
 		let meeting = await Meeting.findOneSafe<Meeting>(returns, options);
 		return meeting;
 	}

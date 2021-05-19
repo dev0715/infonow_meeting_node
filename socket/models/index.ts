@@ -1,10 +1,11 @@
 export interface SocketData {
-	token: string | null;
-	userId: string | null;
-	locale: string | null;
-	type: string | null;
-	meetingId: string;
-	data: {} | null;
+	token?: string | null;
+	userId?: string | null;
+	locale?: string | null;
+	type?: string | null;
+	meetingId?: string;
+	data?: {} | null;
+	[key:string]: any
 }
 
 export interface SocketRoom {

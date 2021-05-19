@@ -1,14 +1,16 @@
 import express from "express"; // using express
 import http from "http";
-import redis from "socket.io-redis";
+import { createAdapter } from "socket.io-redis";
 import { Socket } from "socket.io";
-import { t } from "../sequelize/locales";
-const socketIO = require("socket.io");
+import { Server } from 'socket.io';
 import Configs from "../configs";
-import { IOEvents, createRoom, endCall } from "./events";
-import { SocketData, SocketRoom } from "./models";
+import { OnConnect } from "./events/on-connect";
+import { Logger } from "../sequelize/utils/logger";
+import { RedisClient } from "redis";
+import chalk from "chalk";
 
 const socketConfig = Configs!.WSServerConfigurations;
+const redisConfig = Configs!.RedisServerConfiguration;
 
 declare module "socket.io" {
 	interface Socket {
@@ -20,50 +22,26 @@ declare module "socket.io" {
 }
 
 export const StartSocketServer = () => {
-	let app = express();
-	let server = http.createServer(app);
+	try {
+		let app = express();
+		let server = http.createServer(app);
+		Logger.infoBright("* Attempting to start Socket Server");
+		let io = new Server(server);
+		const pubClient = new RedisClient(redisConfig);
+		const subClient = pubClient.duplicate();
+		io.adapter(createAdapter({ pubClient, subClient }));
 
-	// TODO: Setup Redis Adapter by downgrading Redis Client to 5.0 instead of 6.0
-	// const adapter = redis({ host: "127.0.0.1", port: 6379 });
+		// make connection with user from server side
+		io.on("connection", (socket: Socket) => OnConnect(io, socket));
 
-	let io = socketIO(server);
-	// io.adapter(adapter);
+		const port = socketConfig.port; // setting the port
+		const onLaunchServer = () => {
+			console.timeEnd('* Server start process took')
+			Logger.info(`* Socket Server is Live at: ${chalk.bold.greenBright(socketConfig.host + ':' + port)} \\o/`)
+		}
 
-	var rooms: SocketRoom = {};
-
-	// make connection with user from server side
-	io.on("connection", (socket: Socket) => {
-		console.log("New user connected");
-
-		socket.locale = "en";
-		socket.t = (message: string, ...args: any) => {
-			t.setLocale(socket.locale);
-			return t.__(message, ...args);
-		};
-
-		socket.emit(IOEvents.CONNECT);
-		socket.emit(IOEvents.SET_LANGUAGE);
-		// socket.id
-
-		socket.on(IOEvents.SET_LANGUAGE, (res: SocketData) => {
-			console.log(IOEvents.SET_LANGUAGE, res);
-			if (res.locale) {
-				socket.locale = res.locale;
-			} else {
-				socket.locale = "en";
-			}
-		});
-
-		socket.on(IOEvents.CREATE_ROOM, (res: SocketData) => {
-			createRoom(socket, rooms, res);
-		});
-		socket.on(IOEvents.DISCONNECT, () => {
-			console.log(IOEvents.DISCONNECT);
-			endCall(socket, rooms);
-		});
-	});
-
-	const port = socketConfig.port; // setting the port
-
-	server.listen(port);
+		server.listen(port, onLaunchServer);
+	} catch (error) {
+		Logger.error(error);
+	}
 };

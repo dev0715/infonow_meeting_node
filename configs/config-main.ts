@@ -14,6 +14,11 @@ export namespace Configurations {
 		token_life: parseInt(process.env.AUTHORIZATION_TOKEN_LIFE ?? "0") * 60 * 60 * 1000, // Converting Hours to Milliseconds
 	};
 
+	export const RedisServerConfiguration = {
+		host: process.env.REDIS_SERVER_HOST!,
+		port: parseInt(process.env.REDIS_SERVER_PORT!)
+	}
+
 	export const HTTPServerConfigurations = {
 		env: process.env.HTTP_SERVER_ENV,
 		host: process.env.HTTP_SERVER_HOST,

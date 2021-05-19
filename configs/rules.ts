@@ -102,5 +102,13 @@ export const RequiredConfigurations: Configuration[] = [
 	{
 		"name": "ERROR_REPORTING_EMAIL",
 		"type": "email"
+	},
+	{
+		"name": "REDIS_SERVER_HOST",
+		"type": "string"
+	},
+	{
+		"name": "REDIS_SERVER_PORT",
+		"type": "number"
 	}
 ]

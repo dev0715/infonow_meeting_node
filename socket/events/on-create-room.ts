@@ -1,78 +1,76 @@
-import { Socket } from "socket.io";
-import { SocketData, SocketOffer, SocketRoom } from "../models";
+import { Server, Socket } from "socket.io";
+import { SocketData, SocketOffer } from "../models";
 import { Redis } from "../../redis";
 import { MeetingUtils } from "../../app/services";
 
 import {
 	IOEvents,
-	joinRoom,
-	answerCall,
-	startCall,
-	endCall,
-	createIceEventData,
-	muteAudio,
-	unmuteAudio,
-	muteVideo,
-	unmuteVideo,
-	onScreenSharing,
-	onVideoSharing,
+	OnJoinRoom,
+	OnAnswerCall,
+	OnStartCall,
+	OnEndCall,
+	OnCreateIceEventData,
+	OnMuteAudio,
+	OnUnmuteAudio,
+	OnMuteVideo,
+	OnUnmuteVideo,
+	OnScreenSharing,
+	OnVideoSharing,
 } from "./index";
+import { isRoomEmpty } from "./utils";
 
-export const createRoom = async (
+export async function OnCreateRoom(
+	io: Server,
 	socket: Socket,
-	rooms: SocketRoom,
 	res: SocketData
-) => {
-	console.log(IOEvents.CREATE_ROOM, res.meetingId);
+) {
+	let meetingId = res.meetingId!
+
+	console.log(IOEvents.CREATE_ROOM, meetingId);
 
 	// VERIFY AND VALIDATE USER BEFORE JOIN //
-	let isMeeting = await checkMeeting(socket, res);
+	let isMeeting = await isValidMeeting(socket, meetingId);
 	if (!isMeeting) {
-		return;
+		let message = socket.t("No meeting found");
+		return socket.emit(IOEvents.ROOM_NOT_FOUND, { message: message });
 	}
 
-	// ATTACH SOCKET EVENTS
-	attachEvents(socket, rooms);
+	// Attach Socket Events
+	attachEvents(io, socket);
 
-	// TO CHECK IF ROOM EXISTS OR NOT //
-
-	if (rooms.hasOwnProperty(res.meetingId)) {
+	// To Check If Room Exists Or Not //
+	if (!isRoomEmpty(io, meetingId)) {
 		let message = socket.t("meeting already exists");
-		socket.emit(IOEvents.ROOM_EXIST, { message: message });
-		return;
+		return socket.emit(IOEvents.ROOM_EXIST, { message: message });
 	}
-
+	
 	let meetingOffer: SocketOffer = {
-		userId: res.userId,
-		offer: res.data,
+		userId: socket.userId!,
+		offer: res.data!,
 	};
-	Redis.getInstance().set(res.meetingId, JSON.stringify(meetingOffer));
+
+	Redis.getInstance().set(meetingId, JSON.stringify(meetingOffer));
+
 	//ATTACH MEETING ID WITH SOCKET
-	socket.meetingId = res.meetingId;
-	socket.join(socket.meetingId);
-
-	rooms[socket.meetingId] = socket.meetingId;
-
+	socket.meetingId = meetingId;
+	socket.join(meetingId);
 	socket.emit(IOEvents.CALL_ON_WAIT);
 };
 
-async function checkMeeting(socket: Socket, res: SocketData): Promise<Boolean> {
-	let meeting = await MeetingUtils.getMeeting(res.meetingId);
 
+async function isValidMeeting(socket: Socket, meetingId: string): Promise<Boolean> {
+	let meeting = await MeetingUtils.getMeeting(meetingId);
+	
 	let validUser = meeting?.participants.find(
-		(x) => x.user.userId === res.userId
+		(x) => x.user.userId === socket.userId!
 	);
-
-	// console.log("Valid_User", validUser);
 
 	if (meeting == null) {
 		let message = socket.t("No meeting found");
 		socket.emit(IOEvents.MEETING_NOT_FOUND, { message: message });
 		return false;
 	} else if (
-		meeting.status == "pending" ||
-		meeting.status == "rejected" ||
-		meeting.status == "cancelled"
+		["pending", "rejected", "cancelled"].indexOf(meeting.status!) > -1
 	) {
 		let message = socket.t("meeting is %s", meeting.status);
 		socket.emit(IOEvents.MEETING_NOT_ACTIVE, { message: message });
@@ -82,57 +80,20 @@ async function checkMeeting(socket: Socket, res: SocketData): Promise<Boolean> {
 		socket.emit(IOEvents.INVALID_PARTICIPANT, { message: message });
 		return false;
 	}
-	//ATTACH USER ID WITH SOCKET//
-	if (res.userId) {
-		socket.userId = res.userId;
-	}
 
 	return true;
 }
 
-function attachEvents(socket: Socket, rooms: SocketRoom) {
-	socket.on(IOEvents.ROOM_JOIN, (res: SocketData) => {
-		joinRoom(socket, rooms, res);
-	});
-
-	socket.on(IOEvents.ANSWER_CALL, (res: SocketData) => {
-		answerCall(socket, res);
-	});
-
-	socket.on(IOEvents.START_CALL, () => {
-		startCall(socket);
-	});
-
-	socket.on(IOEvents.END_CALL, () => {
-		console.log(IOEvents.END_CALL);
-		endCall(socket, rooms);
-	});
-
-	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res: SocketData) => {
-		createIceEventData(socket, res);
-	});
-
-	socket.on(IOEvents.MUTE_AUDIO, () => {
-		muteAudio(socket);
-	});
-
-	socket.on(IOEvents.UNMUTE_AUDIO, () => {
-		unmuteAudio(socket);
-	});
-
-	socket.on(IOEvents.MUTE_VIDEO, () => {
-		muteVideo(socket);
-	});
-
-	socket.on(IOEvents.UNMUTE_VIDEO, () => {
-		unmuteVideo(socket);
-	});
-
-	socket.on(IOEvents.VIDEO_SHARING, () => {
-		onVideoSharing(socket);
-	});
-
-	socket.on(IOEvents.SCREEN_SHARING, () => {
-		onScreenSharing(socket);
-	});
+function attachEvents(io: Server, socket: Socket) {
+	socket.on(IOEvents.ROOM_JOIN, res => OnJoinRoom(io, socket, res));
+	socket.on(IOEvents.ANSWER_CALL, res => OnAnswerCall(socket, res));
+	socket.on(IOEvents.START_CALL, () => OnStartCall(socket));
+	socket.on(IOEvents.END_CALL, () => OnEndCall(socket));
+	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, res => OnCreateIceEventData(socket, res));
+	socket.on(IOEvents.MUTE_AUDIO, () => OnMuteAudio(socket));
+	socket.on(IOEvents.UNMUTE_AUDIO, () => OnUnmuteAudio(socket));
+	socket.on(IOEvents.MUTE_VIDEO, () => OnMuteVideo(socket));
+	socket.on(IOEvents.UNMUTE_VIDEO, () => OnUnmuteVideo(socket));
+	socket.on(IOEvents.VIDEO_SHARING, () => OnVideoSharing(socket));
+	socket.on(IOEvents.SCREEN_SHARING, () => OnScreenSharing(socket));
 }
