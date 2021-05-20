@@ -13,30 +13,40 @@ import {
 	NotFoundError,
 } from "../../../sequelize/utils/errors";
 import { a } from "../../../sequelize/locales";
+import { sequelize } from "../../../sequelize";
 
 export class MeetingUtils {
 	static async getAllUserMeetings(
 		userId: string,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting[]> {
-		let user = await User.findOne({
-			where: {
-				userId: userId,
-			},
+		let meetingIds = await Participant.findAll({
+			include: [
+				{
+					model: User,
+					where: {
+						userId,
+					},
+				},
+			],
+			attributes: ["meetingId"],
 		});
-		let options = {
+
+		let options: any = {
 			include: [
 				{
 					model: Participant,
 					include: [User],
-					where: {
-						participantId: user?._userId,
-					},
 				},
 				User,
 			],
+			where: {
+				_meetingId: meetingIds.map((m) => m.meetingId),
+			},
 		};
+
 		let meetings = await Meeting.findAllSafe<Meeting[]>(returns, options);
+
 		return meetings;
 	}
 
@@ -68,41 +78,53 @@ export class MeetingUtils {
 		meeting: NewMeetingSchemaType,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | null> {
-		await NewMeetingSchema.validateAsync(meeting);
+		var transaction;
+		try {
+			transaction = await sequelize.transaction();
+			await NewMeetingSchema.validateAsync(meeting);
 
-		let users = await User.findAll({
-			where: {
-				userId: [meeting.createdBy, meeting.guest],
-			},
-		});
+			let users = await User.findAll({
+				where: {
+					userId: [meeting.createdBy, meeting.guest],
+				},
+			});
 
-		let meetingUser = users.find(
-			(x: User) => x.userId === meeting.createdBy
-		);
-		let guestUser = users.find((x: User) => x.userId === meeting.guest);
+			let meetingUser = users.find(
+				(x: User) => x.userId === meeting.createdBy
+			);
+			let guestUser = users.find((x: User) => x.userId === meeting.guest);
 
-		if (!meetingUser) throw new NotFoundError("User not found");
-		if (!guestUser) throw new NotFoundError("Guest not found");
+			if (!meetingUser) throw new NotFoundError("User not found");
+			if (!guestUser) throw new NotFoundError("Guest not found");
 
-		let newMeeting = await Meeting.create({
-			...meeting,
-			createdBy: meetingUser!._userId,
-		} as any);
+			let newMeeting = await Meeting.create({
+				...meeting,
+				createdBy: meetingUser!._userId,
+				transaction,
+			} as any);
 
-		let participantsData: any = [
-			{
-				meetingId: newMeeting._meetingId,
-				participantId: meetingUser!._userId,
-			},
-			{
-				meetingId: newMeeting._meetingId,
-				participantId: guestUser?._userId,
-			},
-		];
+			let participantsData: any = [
+				{
+					meetingId: newMeeting._meetingId,
+					participantId: meetingUser!._userId,
+				},
+				{
+					meetingId: newMeeting._meetingId,
+					participantId: guestUser?._userId,
+				},
+			];
 
-		let participants = await Participant.bulkCreate(participantsData);
+			let participants = await Participant.bulkCreate(participantsData, {
+				transaction,
+			});
 
-		return this.getMeeting(newMeeting._meetingId, returns);
+			await transaction.commit();
+
+			return this.getMeeting(newMeeting._meetingId, returns);
+		} catch (error) {
+			if (transaction) await transaction.rollback();
+			throw error;
+		}
 	}
 
 	private static async updateMeetingCore(meeting: Meeting): Promise<any> {
