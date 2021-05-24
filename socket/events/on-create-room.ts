@@ -24,7 +24,7 @@ export async function OnCreateRoom(
 	socket: Socket,
 	res: SocketData
 ) {
-	let meetingId = res.meetingId!
+	let meetingId = res.meetingId!;
 
 	console.log(IOEvents.CREATE_ROOM, meetingId);
 
@@ -43,7 +43,7 @@ export async function OnCreateRoom(
 		let message = socket.t("meeting already exists");
 		return socket.emit(IOEvents.ROOM_EXIST, { message: message });
 	}
-	
+
 	let meetingOffer: SocketOffer = {
 		userId: socket.userId!,
 		offer: res.data!,
@@ -55,12 +55,14 @@ export async function OnCreateRoom(
 	socket.meetingId = meetingId;
 	socket.join(meetingId);
 	socket.emit(IOEvents.CALL_ON_WAIT);
-};
+}
 
-
-async function isValidMeeting(socket: Socket, meetingId: string): Promise<Boolean> {
+async function isValidMeeting(
+	socket: Socket,
+	meetingId: string
+): Promise<Boolean> {
 	let meeting = await MeetingUtils.getMeeting(meetingId);
-	
+
 	let validUser = meeting?.participants.find(
 		(x) => x.user.userId === socket.userId!
 	);
@@ -85,11 +87,13 @@ async function isValidMeeting(socket: Socket, meetingId: string): Promise<Boolea
 }
 
 function attachEvents(io: Server, socket: Socket) {
-	socket.on(IOEvents.ROOM_JOIN, res => OnJoinRoom(io, socket, res));
-	socket.on(IOEvents.ANSWER_CALL, res => OnAnswerCall(socket, res));
+	socket.on(IOEvents.ROOM_JOIN, (res) => OnJoinRoom(io, socket, res));
+	socket.on(IOEvents.ANSWER_CALL, (res) => OnAnswerCall(socket, res));
 	socket.on(IOEvents.START_CALL, () => OnStartCall(socket));
 	socket.on(IOEvents.END_CALL, () => OnEndCall(socket));
-	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, res => OnCreateIceEventData(socket, res));
+	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res) =>
+		OnCreateIceEventData(socket, res)
+	);
 	socket.on(IOEvents.MUTE_AUDIO, () => OnMuteAudio(socket));
 	socket.on(IOEvents.UNMUTE_AUDIO, () => OnUnmuteAudio(socket));
 	socket.on(IOEvents.MUTE_VIDEO, () => OnMuteVideo(socket));

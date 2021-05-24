@@ -15,7 +15,6 @@ export async function OnAuthorization(
 	socket: Socket,
 	data: SocketData
 ) {
-	// TODO: Authorize User and Join Room if user is valid
 	try {
 		if (data.authorization) {
 			let user = await authorizeUser(data.authorization);
