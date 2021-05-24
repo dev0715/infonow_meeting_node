@@ -15,6 +15,8 @@ import {
 import { a } from "../../../sequelize/locales";
 import { sequelize } from "../../../sequelize";
 
+import { Op } from "sequelize";
+
 export class MeetingUtils {
 	static async getAllUserMeetings(
 		userId: string,
@@ -41,7 +43,7 @@ export class MeetingUtils {
 				User,
 			],
 			where: {
-				_meetingId: meetingIds.map((m) => m.meetingId),
+				_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
 			},
 		};
 
@@ -85,7 +87,7 @@ export class MeetingUtils {
 
 			let users = await User.findAll({
 				where: {
-					userId: [meeting.createdBy, meeting.guest],
+					userId: { [Op.in]: [meeting.createdBy, meeting.guest] },
 				},
 			});
 
