@@ -163,7 +163,7 @@ export class MeetingUtils {
 			);
 		}
 
-		return this.getMeeting(meeting.meetingId, returns);
+		return await this.getMeeting(meeting.meetingId, returns);
 	}
 
 	static async cancelOrRescheduleMeeting(
@@ -188,6 +188,6 @@ export class MeetingUtils {
 		}
 
 		await this.updateMeetingCore(meeting);
-		return this.getMeeting(meeting.meetingId, returns);
+		return await this.getMeeting(meeting.meetingId, returns);
 	}
 }
