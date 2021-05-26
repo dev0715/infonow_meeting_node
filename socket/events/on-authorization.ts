@@ -4,6 +4,7 @@ import { User } from "../../sequelize";
 import { TokenCore } from "../../sequelize/middlewares/auth/token";
 import { SocketData } from "../models";
 import { OnCreateRoom } from "./on-create-room";
+import _ from "lodash";
 
 async function authorizeUser(token: string) {
 	let user = await TokenCore.Verify(token);
@@ -22,7 +23,10 @@ export async function OnAuthorization(
 			socket.user = user;
 
 			console.log(`USER ${socket.userId} AUTHORIZED`);
-			socket.emit(IOEvents.AUTHORIZATION, { success: true });
+			socket.emit(IOEvents.AUTHORIZATION, {
+				success: true,
+				data: _.pick(user, ["userId", "name", "roleId"]),
+			});
 			socket.on(IOEvents.CREATE_ROOM, (res) =>
 				OnCreateRoom(io, socket, res)
 			);

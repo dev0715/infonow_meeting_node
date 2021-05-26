@@ -5,7 +5,7 @@ export interface SocketData {
 	type?: string | null;
 	meetingId?: string;
 	data?: {} | null;
-	[key:string]: any
+	[key: string]: any;
 }
 
 export interface SocketRoom {
@@ -14,5 +14,6 @@ export interface SocketRoom {
 
 export interface SocketOffer {
 	userId: string | null;
+	user: {};
 	offer: {} | null;
 }

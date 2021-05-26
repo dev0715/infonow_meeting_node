@@ -4,11 +4,7 @@ import { Redis } from "../../redis";
 import { IOEvents } from "./index";
 import { getClientsInRoom } from "./utils";
 
-export function OnJoinRoom(
-	io: Server,
-	socket: Socket,
-	res: SocketData
-) {
+export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 	let meetingId = res.meetingId!;
 	console.log(IOEvents.ROOM_JOIN, meetingId);
 
@@ -28,7 +24,7 @@ export function OnJoinRoom(
 
 		let data: SocketOffer = JSON.parse(reply);
 		let userAlreadyJoined = data.userId === socket.userId;
-		
+
 		if (userAlreadyJoined) {
 			let message = socket.t("already joined on another client");
 			socket.emit(IOEvents.ALREADY_JOINED, { message: message });
@@ -36,7 +32,7 @@ export function OnJoinRoom(
 			socket.meetingId = meetingId;
 			socket.join(meetingId);
 			socket.emit(IOEvents.ROOM_JOIN, data.offer);
-			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER);
+			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER, { data: data.user });
 		}
 	});
-};
+}

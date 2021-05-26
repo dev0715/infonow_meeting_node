@@ -12,5 +12,4 @@ export const OnStartCall = (socket: Socket) => {
 	} catch (error) {
 		Logger.error(error);
 	}
-
 };

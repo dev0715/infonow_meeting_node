@@ -17,7 +17,11 @@ import {
 	OnScreenSharing,
 	OnVideoSharing,
 } from "./index";
+
+import _ from "lodash";
 import { isRoomEmpty } from "./utils";
+import { OnOpenBoard } from "./on-open-board";
+import { OnCloseBoard } from "./on-close-board";
 
 export async function OnCreateRoom(
 	io: Server,
@@ -46,6 +50,7 @@ export async function OnCreateRoom(
 
 	let meetingOffer: SocketOffer = {
 		userId: socket.userId!,
+		user: _.pick(socket.user, ["userId", "name", "roleId"]),
 		offer: res.data!,
 	};
 
@@ -100,4 +105,6 @@ function attachEvents(io: Server, socket: Socket) {
 	socket.on(IOEvents.UNMUTE_VIDEO, () => OnUnmuteVideo(socket));
 	socket.on(IOEvents.VIDEO_SHARING, () => OnVideoSharing(socket));
 	socket.on(IOEvents.SCREEN_SHARING, () => OnScreenSharing(socket));
+	socket.on(IOEvents.OPEN_BOARD, () => OnOpenBoard(socket));
+	socket.on(IOEvents.CLOSE_BOARD, () => OnCloseBoard(socket));
 }

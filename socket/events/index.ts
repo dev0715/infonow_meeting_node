@@ -10,6 +10,8 @@ export * from "./on-mute-video";
 export * from "./on-unmute-video";
 export * from "./on-video-sharing";
 export * from "./on-screen-sharing";
+export * from "./on-close-board";
+export * from "./on-open-board";
 
 export const IOEvents = {
 	CONNECT: "CONNECT",
