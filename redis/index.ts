@@ -12,9 +12,9 @@ export class Redis {
 			console.error("Redis Server Error:", error);
 		});
 
-		refClient.flushdb(function (err: any, succeeded: any) {
-			console.log("Redis Server Flush DB:", succeeded);
-		});
+		// refClient.flushdb(function (err: any, succeeded: any) {
+		// 	console.log("Redis Server Flush DB:", succeeded);
+		// });
 
 		this.client = refClient;
 	}

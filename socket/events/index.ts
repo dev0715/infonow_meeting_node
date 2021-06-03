@@ -8,10 +8,11 @@ export * from "./on-mute-audio";
 export * from "./on-unmute-audio";
 export * from "./on-mute-video";
 export * from "./on-unmute-video";
-export * from "./on-video-sharing";
-export * from "./on-screen-sharing";
+export * from "./on-screen-sharing-disabled";
+export * from "./on-screen-sharing-enabled";
 export * from "./on-close-board";
 export * from "./on-open-board";
+export * from "./on-reconnecting";
 
 export const IOEvents = {
 	CONNECT: "CONNECT",
@@ -37,8 +38,11 @@ export const IOEvents = {
 	UNMUTE_VIDEO: "UNMUTE_VIDEO",
 	MUTE_AUDIO: "MUTE_AUDIO",
 	UNMUTE_AUDIO: "UNMUTE_AUDIO",
-	SCREEN_SHARING: "SCREEN_SHARING",
-	VIDEO_SHARING: "VIDEO_SHARING",
+	SCREEN_SHARING_ENABLED: "SCREEN_SHARING_ENABLED",
+	SCREEN_SHARING_DISABLED: "SCREEN_SHARING_DISABLED",
 	OPEN_BOARD: "OPEN_BOARD",
 	CLOSE_BOARD: "CLOSE_BOARD",
+	NEW_ANSWER: "NEW_ANSWER",
+	NEW_OFFER: "NEW_OFFER",
+	RECONNECTING: "RECONNECTING",
 };

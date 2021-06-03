@@ -6,9 +6,10 @@ export const OnUnmuteVideo = (socket: Socket) => {
 	try {
 		console.log(IOEvents.UNMUTE_VIDEO, socket.meetingId);
 		if (socket.meetingId)
-			socket.to(socket.meetingId).emit(IOEvents.UNMUTE_VIDEO, {userId: socket.userId});
+			socket
+				.to(socket.meetingId)
+				.emit(IOEvents.UNMUTE_VIDEO, { userId: socket.userId });
 	} catch (error) {
-		Logger.error(error)
+		Logger.error(error);
 	}
-
 };

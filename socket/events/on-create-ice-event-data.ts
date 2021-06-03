@@ -5,12 +5,15 @@ import { IOEvents } from "./index";
 
 export const OnCreateIceEventData = (socket: Socket, res: SocketData) => {
 	try {
-		console.log(IOEvents.CREATE_ICE_EVENT_DATA, socket.meetingId)
-		if (socket.meetingId) {
-			socket.to(socket.meetingId).emit(IOEvents.CREATE_ICE_EVENT_DATA, res.data)
+		console.log(IOEvents.CREATE_ICE_EVENT_DATA, socket.meetingId);
+		if (socket.meetingId && res.data) {
+			socket
+				.to(socket.meetingId)
+				.emit(IOEvents.CREATE_ICE_EVENT_DATA, { data: res.data });
+		} else {
+			socket.disconnect();
 		}
 	} catch (error) {
-		Logger.error(error)
+		Logger.error(error);
 	}
-
 };

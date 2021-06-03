@@ -2,14 +2,16 @@ import { Socket } from "socket.io";
 import { Logger } from "../../sequelize/utils/logger";
 import { IOEvents } from "./index";
 
-export function OnMuteAudio(socket: Socket) {
+export const OnScreenSharingEnabled = (socket: Socket) => {
 	try {
-		console.log(IOEvents.MUTE_AUDIO, socket.meetingId);
+		console.log(IOEvents.SCREEN_SHARING_ENABLED, socket.meetingId);
 		if (socket.meetingId)
 			socket
 				.to(socket.meetingId)
-				.emit(IOEvents.MUTE_AUDIO, { userId: socket.userId });
+				.emit(IOEvents.SCREEN_SHARING_ENABLED, {
+					userId: socket.userId,
+				});
 	} catch (error) {
 		Logger.error(error);
 	}
-}
+};

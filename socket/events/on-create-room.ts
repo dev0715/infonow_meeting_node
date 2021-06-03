@@ -3,25 +3,10 @@ import { SocketData, SocketOffer } from "../models";
 import { Redis } from "../../redis";
 import { MeetingUtils } from "../../app/services";
 
-import {
-	IOEvents,
-	OnJoinRoom,
-	OnAnswerCall,
-	OnStartCall,
-	OnEndCall,
-	OnCreateIceEventData,
-	OnMuteAudio,
-	OnUnmuteAudio,
-	OnMuteVideo,
-	OnUnmuteVideo,
-	OnScreenSharing,
-	OnVideoSharing,
-} from "./index";
+import { IOEvents } from "./index";
 
 import _ from "lodash";
 import { isRoomEmpty } from "./utils";
-import { OnOpenBoard } from "./on-open-board";
-import { OnCloseBoard } from "./on-close-board";
 
 export async function OnCreateRoom(
 	io: Server,
@@ -39,9 +24,6 @@ export async function OnCreateRoom(
 		return socket.emit(IOEvents.ROOM_NOT_FOUND, { message: message });
 	}
 
-	// Attach Socket Events
-	attachEvents(io, socket);
-
 	// To Check If Room Exists Or Not //
 	if (!isRoomEmpty(io, meetingId)) {
 		let message = socket.t("meeting already exists");
@@ -50,16 +32,32 @@ export async function OnCreateRoom(
 
 	let meetingOffer: SocketOffer = {
 		userId: socket.userId!,
-		user: _.pick(socket.user, ["userId", "name", "roleId"]),
+		user: _.pick(socket.user, [
+			"userId",
+			"name",
+			"roleId",
+			"profilePicture",
+		]),
 		offer: res.data!,
 	};
 
-	Redis.getInstance().set(meetingId, JSON.stringify(meetingOffer));
-
-	//ATTACH MEETING ID WITH SOCKET
-	socket.meetingId = meetingId;
-	socket.join(meetingId);
-	socket.emit(IOEvents.CALL_ON_WAIT);
+	Redis.getInstance().set(
+		meetingId,
+		JSON.stringify(meetingOffer),
+		(err, res) => {
+			console.log("CREATE_ROOM_REDIS_SET_KEY", err, res);
+			if (err || !res) {
+				socket.leave(meetingId);
+				return socket.emit(IOEvents.CREATE_ROOM);
+			}
+			if (res == "OK") {
+				//ATTACH MEETING ID WITH SOCKET
+				socket.meetingId = meetingId;
+				socket.join(meetingId);
+				return socket.emit(IOEvents.CALL_ON_WAIT);
+			}
+		}
+	);
 }
 
 async function isValidMeeting(
@@ -89,22 +87,4 @@ async function isValidMeeting(
 	}
 
 	return true;
-}
-
-function attachEvents(io: Server, socket: Socket) {
-	socket.on(IOEvents.ROOM_JOIN, (res) => OnJoinRoom(io, socket, res));
-	socket.on(IOEvents.ANSWER_CALL, (res) => OnAnswerCall(socket, res));
-	socket.on(IOEvents.START_CALL, () => OnStartCall(socket));
-	socket.on(IOEvents.END_CALL, () => OnEndCall(socket));
-	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res) =>
-		OnCreateIceEventData(socket, res)
-	);
-	socket.on(IOEvents.MUTE_AUDIO, () => OnMuteAudio(socket));
-	socket.on(IOEvents.UNMUTE_AUDIO, () => OnUnmuteAudio(socket));
-	socket.on(IOEvents.MUTE_VIDEO, () => OnMuteVideo(socket));
-	socket.on(IOEvents.UNMUTE_VIDEO, () => OnUnmuteVideo(socket));
-	socket.on(IOEvents.VIDEO_SHARING, () => OnVideoSharing(socket));
-	socket.on(IOEvents.SCREEN_SHARING, () => OnScreenSharing(socket));
-	socket.on(IOEvents.OPEN_BOARD, () => OnOpenBoard(socket));
-	socket.on(IOEvents.CLOSE_BOARD, () => OnCloseBoard(socket));
 }
