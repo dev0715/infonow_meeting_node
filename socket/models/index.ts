@@ -5,6 +5,7 @@ export interface SocketData {
 	type?: string | null;
 	meetingId?: string;
 	data?: {} | null;
+	newConnection?: boolean | null;
 	[key: string]: any;
 }
 
