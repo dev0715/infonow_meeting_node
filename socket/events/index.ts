@@ -13,6 +13,7 @@ export * from "./on-screen-sharing-enabled";
 export * from "./on-close-board";
 export * from "./on-open-board";
 export * from "./on-reconnecting";
+export * from "./on-disconnect";
 
 export const IOEvents = {
 	CONNECT: "CONNECT",

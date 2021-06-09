@@ -45,7 +45,7 @@ export async function OnCreateRoom(
 		meetingId,
 		JSON.stringify(meetingOffer),
 		(err, res) => {
-			console.log("CREATE_ROOM_REDIS_SET_KEY", err, res);
+			// console.log("CREATE_ROOM_REDIS_SET_KEY", err, res);
 			if (err || !res) {
 				socket.leave(meetingId);
 				return socket.emit(IOEvents.CREATE_ROOM);

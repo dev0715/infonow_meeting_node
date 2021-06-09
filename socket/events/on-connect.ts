@@ -4,7 +4,7 @@ import { t } from "../../sequelize/locales";
 import { Logger } from "../../sequelize/utils/logger";
 import { SocketData } from "../models";
 import { OnAuthorization } from "./on-authorization";
-import { OnEndCall } from "./on-end-call";
+import { OnDisconnect } from "./on-disconnect";
 
 function OnLocaleSet(socket: Socket, data: SocketData = { locale: "en" }) {
 	try {
@@ -27,7 +27,7 @@ export function OnConnect(io: Server, socket: Socket) {
 		OnAuthorization(io, socket, data)
 	);
 	socket.on(IOEvents.SET_LANGUAGE, (data) => OnLocaleSet(socket, data));
-	socket.on(IOEvents.DISCONNECT, () => OnEndCall(socket));
+	socket.on(IOEvents.DISCONNECT, () => OnDisconnect(socket));
 
 	socket.emit(IOEvents.CONNECT);
 }
