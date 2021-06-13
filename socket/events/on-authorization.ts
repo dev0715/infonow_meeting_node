@@ -23,6 +23,7 @@ import _ from "lodash";
 import { OnNewAnswer } from "./on-new-answer";
 import { OnNewOffer } from "./on-new-offer";
 import { OnReconnecting } from "./on-reconnecting";
+import { SequelizeAttributes } from "../../sequelize/types";
 
 async function authorizeUser(token: string) {
 	let user = await TokenCore.Verify(token);
@@ -37,13 +38,21 @@ export async function OnAuthorization(
 	try {
 		if (data.authorization) {
 			let user = await authorizeUser(data.authorization);
+			let userData = await User.findOneSafe<User>(
+				SequelizeAttributes.WithoutIndexes,
+				{
+					where: {
+						userId: user.userId,
+					},
+				}
+			);
 			socket.userId = user.userId;
-			socket.user = user;
+			socket.user = userData;
 
-			console.log(`USER ${socket.userId} AUTHORIZED`);
+			console.log(`USER ${socket.userId} AUTHORIZED`, userData);
 			socket.emit(IOEvents.AUTHORIZATION, {
 				success: true,
-				data: _.pick(user, [
+				data: _.pick(userData, [
 					"userId",
 					"name",
 					"roleId",

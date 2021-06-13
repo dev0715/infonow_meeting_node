@@ -8,6 +8,7 @@ import {
 } from "../../../sequelize/utils/errors";
 import { Meeting } from "../../../sequelize/models/Meeting";
 import { a } from "../../../sequelize/locales";
+import { TokenCore } from "../../../sequelize/middlewares/auth/token";
 
 /**@urlParams  /:userId */
 export async function getAllUserMeetings(
@@ -100,6 +101,24 @@ export async function cancelOrRescheduleMeeting(
 		);
 		if (updatedMeeting) return DataResponse(res, 200, updatedMeeting);
 		throw new NotFoundError("Failed to update meeting, try again");
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
+export async function getMeetingToken(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		let meetingTokenData = {
+			userId: req.CurrentUser?.userId,
+		};
+
+		let token = await TokenCore.IssueJWT(meetingTokenData, 86400 * 2);
+		return DataResponse(res, 200, token);
 	} catch (err) {
 		// Handle Exception
 		return next(err);

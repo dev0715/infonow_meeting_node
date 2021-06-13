@@ -80,15 +80,14 @@ export class MeetingUtils {
 		meeting: NewMeetingSchemaType,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | null> {
-		var transaction;
 		try {
-			transaction = await sequelize.transaction();
 			await NewMeetingSchema.validateAsync(meeting);
 
 			let users = await User.findAll({
 				where: {
 					userId: { [Op.in]: [meeting.createdBy, meeting.guest] },
 				},
+				attributes: ["_userId", "userId"],
 			});
 
 			let meetingUser = users.find(
@@ -99,32 +98,28 @@ export class MeetingUtils {
 			if (!meetingUser) throw new NotFoundError("User not found");
 			if (!guestUser) throw new NotFoundError("Guest not found");
 
-			let newMeeting = await Meeting.create({
-				...meeting,
-				createdBy: meetingUser!._userId,
-				transaction,
-			} as any);
-
 			let participantsData: any = [
 				{
-					meetingId: newMeeting._meetingId,
 					participantId: meetingUser!._userId,
 				},
 				{
-					meetingId: newMeeting._meetingId,
 					participantId: guestUser?._userId,
 				},
 			];
 
-			let participants = await Participant.bulkCreate(participantsData, {
-				transaction,
-			});
-
-			await transaction.commit();
+			let newMeeting = await Meeting.create(
+				{
+					...meeting,
+					createdBy: meetingUser!._userId,
+					participants: participantsData,
+				} as any,
+				{
+					include: [Participant],
+				}
+			);
 
 			return this.getMeeting(newMeeting._meetingId, returns);
 		} catch (error) {
-			if (transaction) await transaction.rollback();
 			throw error;
 		}
 	}
