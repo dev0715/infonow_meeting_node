@@ -1,7 +1,7 @@
 "use strict";
 import { NextFunction, Request, Response } from "express";
 import { DataResponse } from "../../../sequelize/utils/http-response";
-import { MeetingUtils } from "../../services";
+import { MeetingUtils, UserUtils } from "../../services";
 import {
 	NotFoundError,
 	UnAuthorizedError,
@@ -9,6 +9,7 @@ import {
 import { Meeting } from "../../../sequelize/models/Meeting";
 import { a } from "../../../sequelize/locales";
 import { TokenCore } from "../../../sequelize/middlewares/auth/token";
+import { SequelizeAttributes } from "../../../sequelize/types";
 
 /**@urlParams  /:userId */
 export async function getAllUserMeetings(
@@ -63,29 +64,7 @@ export async function newMeeting(
 	}
 }
 
-export async function acceptOrRejectMeeting(
-	req: Request,
-	res: Response,
-	next: NextFunction
-) {
-	try {
-		let meeting: any = {
-			meetingId: req.params.meetingId,
-			status: req.params.type,
-			userId: req.CurrentUser?.userId,
-		};
-		const updatedMeeting = await MeetingUtils.acceptOrRejectMeeting(
-			meeting
-		);
-		if (updatedMeeting) return DataResponse(res, 200, updatedMeeting);
-		throw new NotFoundError("Failed to update meeting, try again");
-	} catch (err) {
-		// Handle Exception
-		return next(err);
-	}
-}
-
-export async function cancelOrRescheduleMeeting(
+export async function acceptOrRejectOrRescheduleMeeting(
 	req: Request,
 	res: Response,
 	next: NextFunction
@@ -95,9 +74,26 @@ export async function cancelOrRescheduleMeeting(
 			...req.body,
 			meetingId: req.params.meetingId,
 			status: req.params.type,
+			userId: req.CurrentUser?.userId,
 		};
-		const updatedMeeting = await MeetingUtils.cancelOrRescheduleMeeting(
-			meeting
+		const updatedMeeting =
+			await MeetingUtils.acceptOrRejectOrRescheduleMeeting(meeting);
+		if (updatedMeeting) return DataResponse(res, 200, updatedMeeting);
+		throw new NotFoundError("Failed to update meeting, try again");
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
+export async function cancelMeeting(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		const updatedMeeting = await MeetingUtils.cancelMeetingByUuid(
+			req.params.meetingId
 		);
 		if (updatedMeeting) return DataResponse(res, 200, updatedMeeting);
 		throw new NotFoundError("Failed to update meeting, try again");
@@ -119,6 +115,27 @@ export async function getMeetingToken(
 
 		let token = await TokenCore.IssueJWT(meetingTokenData, 86400 * 2);
 		return DataResponse(res, 200, token);
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
+export async function getUsersMeetingDates(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		let user = await UserUtils.getUserByUuid(
+			req.params.guest,
+			SequelizeAttributes.WithIndexes
+		);
+		let dates = await MeetingUtils.getMeetingDatesOfUsers([
+			req.CurrentUser?._userId!,
+			user._userId!,
+		]);
+		return DataResponse(res, 200, dates);
 	} catch (err) {
 		// Handle Exception
 		return next(err);

@@ -2,7 +2,6 @@ import {
 	NewMeetingSchema,
 	NewMeetingSchemaType,
 	RescheduleMeetingSchema,
-	CancelMeetingSchema,
 } from "../../../sequelize/validation-schema";
 import { Participant } from "../../../sequelize/models/Participant";
 import { SequelizeAttributes } from "../../../sequelize/types";
@@ -13,7 +12,6 @@ import {
 	NotFoundError,
 } from "../../../sequelize/utils/errors";
 import { a } from "../../../sequelize/locales";
-import { sequelize } from "../../../sequelize";
 
 import { Op } from "sequelize";
 
@@ -132,7 +130,7 @@ export class MeetingUtils {
 		});
 	}
 
-	static async acceptOrRejectMeeting(
+	static async acceptOrRejectOrRescheduleMeeting(
 		meeting: any,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
 	): Promise<Meeting | null> {
@@ -141,7 +139,11 @@ export class MeetingUtils {
 			throw new BadRequestError(...a("No meeting found", ""));
 		}
 
-		if (tempMeeting.user.userId == meeting.userId) {
+		if (
+			tempMeeting.user.userId == meeting.userId &&
+			tempMeeting.status == "rescheduled" &&
+			meeting.status != "accepted"
+		) {
 			throw new BadRequestError(
 				...a(
 					"You are not authorized to %s this meeting",
@@ -150,8 +152,31 @@ export class MeetingUtils {
 			);
 		}
 
-		if (tempMeeting?.status == "pending") {
-			await this.updateMeetingCore(meeting);
+		if (
+			tempMeeting.user.userId != meeting.userId &&
+			tempMeeting.status == "rescheduled" &&
+			meeting.status == "rescheduled"
+		) {
+			throw new BadRequestError(
+				...a(
+					"You are not authorized to %s this meeting",
+					meeting.status
+				)
+			);
+		}
+
+		if (
+			tempMeeting?.status == "pending" &&
+			meeting.status == "rescheduled"
+		) {
+			delete meeting.userId;
+			await RescheduleMeetingSchema.validateAsync(meeting);
+			await this.updateMeetingCore(meeting as any);
+		} else if (
+			tempMeeting?.status == "pending" ||
+			tempMeeting.status == "rescheduled"
+		) {
+			await this.updateMeetingCore(meeting as any);
 		} else {
 			throw new BadRequestError(
 				...a("This meeting cannot be %s", meeting.status)
@@ -161,28 +186,51 @@ export class MeetingUtils {
 		return await this.getMeeting(meeting.meetingId, returns);
 	}
 
-	static async cancelOrRescheduleMeeting(
-		meeting: Meeting,
+	static async cancelMeetingByUuid(
+		meetingId: string,
 		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | any | boolean> {
-		let tempMeeting = await this.getMeeting(meeting.meetingId);
+	): Promise<Meeting | any> {
+		let tempMeeting = await this.getMeeting(meetingId);
 		if (!tempMeeting) {
 			throw new BadRequestError(...a("No meeting found", ""));
 		}
-
-		if (tempMeeting?.status != "accepted") {
+		let checkStatus = ["accepted", "rejected", "cancelled"];
+		if (checkStatus.find((s) => s == tempMeeting?.status)) {
 			throw new BadRequestError(
-				...a("This meeting cannot be %s", meeting.status)
+				...a("This meeting cannot be %s", "cancelled")
 			);
 		}
 
-		if (meeting.status == "rescheduled") {
-			await RescheduleMeetingSchema.validateAsync(meeting);
-		} else if (meeting.status == "cancelled") {
-			await CancelMeetingSchema.validateAsync(meeting);
-		}
+		await this.updateMeetingCore({
+			meetingId: meetingId,
+			status: "cancelled",
+		} as any);
+		return await this.getMeeting(meetingId, returns);
+	}
 
-		await this.updateMeetingCore(meeting);
-		return await this.getMeeting(meeting.meetingId, returns);
+	static async getMeetingDatesOfUsers(
+		userIds: number[],
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
+	): Promise<Meeting[] | null> {
+		console.log("USER_IDS", userIds);
+		let meetingIds = await Participant.findAll({
+			include: [
+				{
+					model: User,
+					where: {
+						userId: { [Op.in]: userIds },
+					},
+				},
+			],
+			attributes: ["meetingId"],
+		});
+
+		let meetings = await Meeting.findAll({
+			where: {
+				_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
+			},
+			attributes: ["scheduledAt"],
+		});
+		return meetings;
 	}
 }
