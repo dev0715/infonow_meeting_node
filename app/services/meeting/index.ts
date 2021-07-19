@@ -140,9 +140,11 @@ export class MeetingUtils {
 		}
 
 		if (
-			tempMeeting.user.userId == meeting.userId &&
-			tempMeeting.status == "rescheduled" &&
-			meeting.status != "accepted"
+			(tempMeeting.user.userId == meeting.userId &&
+				(tempMeeting.status == "pending" ||
+					meeting.status == "rescheduled")) ||
+			(tempMeeting.status == "rescheduled" &&
+				meeting.status == "rejected")
 		) {
 			throw new BadRequestError(
 				...a(
@@ -154,8 +156,7 @@ export class MeetingUtils {
 
 		if (
 			tempMeeting.user.userId != meeting.userId &&
-			tempMeeting.status == "rescheduled" &&
-			meeting.status == "rescheduled"
+			tempMeeting.status == "rescheduled"
 		) {
 			throw new BadRequestError(
 				...a(
@@ -214,20 +215,17 @@ export class MeetingUtils {
 	): Promise<Meeting[] | null> {
 		console.log("USER_IDS", userIds);
 		let meetingIds = await Participant.findAll({
-			include: [
-				{
-					model: User,
-					where: {
-						userId: { [Op.in]: userIds },
-					},
-				},
-			],
+			where: {
+				participantId: { [Op.in]: userIds },
+			},
 			attributes: ["meetingId"],
 		});
+		console.log("Meetings_IDS", userIds);
 
 		let meetings = await Meeting.findAll({
 			where: {
 				_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
+				status: "accepted",
 			},
 			attributes: ["scheduledAt"],
 		});
