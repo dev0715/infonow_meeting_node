@@ -13,4 +13,10 @@ router.get(
 	MeetingsCtrl.getAllUserMeetings
 );
 
+router.get(
+	`/:userId(${UUID_REGEX_ROUTE})/admin-meeting`,
+	AuthorizeUtil.AuthorizeAccessIfAdminOrSuperAdminOnly,
+	MeetingsCtrl.getAdminMeeting
+);
+
 export default router;

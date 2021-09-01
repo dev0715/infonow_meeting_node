@@ -1,7 +1,7 @@
 "use strict";
 import { NextFunction, Request, Response } from "express";
 import { DataResponse } from "../../../sequelize/utils/http-response";
-import { MeetingUtils, UserUtils } from "../../services";
+import { AdminUtils, MeetingUtils, UserUtils } from "../../services";
 import {
 	NotFoundError,
 	UnAuthorizedError,
@@ -45,6 +45,21 @@ export async function getMeeting(
 	}
 }
 
+export async function getAdminMeeting(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		const meeting = await MeetingUtils.getAdminMeeting(req.params.userId);
+		if (meeting) return DataResponse(res, 200, meeting);
+		throw new NotFoundError("No meeting found");
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
 export async function newMeeting(
 	req: Request,
 	res: Response,
@@ -55,6 +70,29 @@ export async function newMeeting(
 		newMeeting.createdBy = req.CurrentUser?.userId;
 
 		const meeting = await MeetingUtils.newMeeting(newMeeting);
+		if (meeting) return DataResponse(res, 200, meeting);
+
+		throw new NotFoundError("Failed to add meeting, try again");
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
+export async function newAdminMeeting(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		let admin = await AdminUtils.getAdminForMeeting();
+		let newMeeting = {
+			...req.body,
+			createdBy: req.CurrentUser?._userId,
+			guest: admin._userId,
+		};
+
+		const meeting = await MeetingUtils.newAdminMeeting(newMeeting);
 		if (meeting) return DataResponse(res, 200, meeting);
 
 		throw new NotFoundError("Failed to add meeting, try again");
