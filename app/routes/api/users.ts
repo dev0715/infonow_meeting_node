@@ -9,13 +9,13 @@ router.get("/authenticate", MeetingsCtrl.getMeetingToken);
 
 router.get(
 	`/:userId(${UUID_REGEX_ROUTE})/meetings`,
-	AuthorizeUtil.AuthorizeAccessIfAdminOrSuperAdminOnly,
+	AuthorizeUtil.AuthorizeAdmin,
 	MeetingsCtrl.getAllUserMeetings
 );
 
 router.get(
 	`/:userId(${UUID_REGEX_ROUTE})/admin-meeting`,
-	AuthorizeUtil.AuthorizeAccessIfAdminOrSuperAdminOnly,
+	AuthorizeUtil.AuthorizeAdmin,
 	MeetingsCtrl.getAdminMeeting
 );
 
