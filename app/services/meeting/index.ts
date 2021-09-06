@@ -209,7 +209,7 @@ export class MeetingUtils {
 				status: { [Op.in]: ["pending", "accepted", "rescheduled"] },
 				scheduledAt: { [Op.gte]: moment() },
 			},
-		});
+		} as any);
 
 		return meetings;
 	}
