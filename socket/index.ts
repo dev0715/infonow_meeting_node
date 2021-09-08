@@ -30,8 +30,8 @@ export const StartSocketServer = () => {
 		let server = http.createServer(app);
 		Logger.infoBright("* Attempting to start Socket Server");
 		let io = new Server(server, {
-			pingInterval: 15000,
-			pingTimeout: 8000,
+			pingInterval: 4000,
+			pingTimeout: 5000,
 		});
 		const pubClient = new RedisClient(redisConfig);
 		const subClient = pubClient.duplicate();

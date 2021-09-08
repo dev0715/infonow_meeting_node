@@ -9,5 +9,6 @@ export const OnEndCall = (socket: Socket) => {
 		socket.leave(socket.meetingId);
 		console.log("ROOM_LEFT");
 		Redis.getInstance().del(socket.meetingId);
+		socket.meetingId = "";
 	}
 };
