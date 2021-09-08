@@ -10,6 +10,7 @@ import { Meeting } from "../../../sequelize/models/Meeting";
 import { a } from "../../../sequelize/locales";
 import { TokenCore } from "../../../sequelize/middlewares/auth/token";
 import { SequelizeAttributes } from "../../../sequelize/types";
+import { MeetingFeedbackUtils } from "../../services/meeting-feedback";
 
 /**@urlParams  /:userId */
 export async function getAllUserMeetings(
@@ -148,7 +149,9 @@ export async function getMeetingToken(
 ) {
 	try {
 		let meetingTokenData = {
+			_userId: req.CurrentUser?._userId,
 			userId: req.CurrentUser?.userId,
+			roleId: req.CurrentUser?.roleId,
 		};
 
 		let token = await TokenCore.IssueJWT(meetingTokenData, 86400 * 2);
@@ -174,6 +177,22 @@ export async function getUsersMeetingDates(
 			user._userId!,
 		]);
 		return DataResponse(res, 200, dates);
+	} catch (err) {
+		// Handle Exception
+		return next(err);
+	}
+}
+
+export async function newMeetingFeedback(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	try {
+		let feedback = req.body;
+		feedback.userId = req.CurrentUser?._userId;
+		let newFeedback = await MeetingFeedbackUtils.newFeedback(feedback);
+		return DataResponse(res, 200, newFeedback);
 	} catch (err) {
 		// Handle Exception
 		return next(err);

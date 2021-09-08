@@ -23,4 +23,6 @@ router.get(
 	MeetingsCtrl.getUsersMeetingDates
 );
 
+router.post("/feedback", MeetingsCtrl.newMeetingFeedback);
+
 export default router;
