@@ -39,7 +39,7 @@ export async function OnAuthorization(
 		if (data.authorization) {
 			let user = await authorizeUser(data.authorization);
 			let userData = await User.findOneSafe<User>(
-				SequelizeAttributes.WithoutIndexes,
+				SequelizeAttributes.WithIndexes,
 				{
 					where: {
 						userId: user.userId,
