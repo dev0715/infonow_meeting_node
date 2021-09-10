@@ -5,6 +5,7 @@ import { IOEvents } from "./index";
 import { getClientsInRoom } from "./utils";
 import { Logger } from "../../sequelize/utils/logger";
 import { BadRequestError } from "../../sequelize/utils/errors";
+import { OnCreateRoom } from "./on-create-room";
 
 export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 	try {
@@ -43,11 +44,7 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 			if (userAlreadyJoined) {
 				for (let client of clients ?? []) {
 					let userSocket = io.sockets.sockets.get(client);
-					if (
-						userSocket &&
-						userSocket.userId === socket.userId &&
-						userSocket.connected
-					) {
+					if (userSocket) {
 						userSocket.leave(meetingId);
 						userSocket.meetingId = "";
 						userSocket.emit(IOEvents.CALL_ENDED, {
@@ -55,14 +52,14 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 						});
 					}
 				}
+			} else {
+				socket.meetingId = meetingId;
+				socket.join(meetingId);
+				socket.emit(IOEvents.ROOM_JOIN, { data: data.offer });
+				socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER, {
+					data: data.user,
+				});
 			}
-
-			socket.meetingId = meetingId;
-			socket.join(meetingId);
-			socket.emit(IOEvents.ROOM_JOIN, { data: data.offer });
-			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER, {
-				data: data.user,
-			});
 		});
 	} catch (error) {
 		Logger.error(error);
