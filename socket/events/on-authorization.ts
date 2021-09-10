@@ -81,7 +81,7 @@ function attachEvents(io: Server, socket: Socket) {
 	socket.on(IOEvents.NEW_ANSWER, (res) => OnNewAnswer(socket, res));
 
 	socket.on(IOEvents.START_CALL, () => OnStartCall(socket));
-	socket.on(IOEvents.END_CALL, () => OnEndCall(socket));
+	socket.on(IOEvents.END_CALL, () => OnEndCall(io, socket));
 	socket.on(IOEvents.CREATE_ICE_EVENT_DATA, (res) =>
 		OnCreateIceEventData(socket, res)
 	);
