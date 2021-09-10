@@ -41,18 +41,28 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 			let userAlreadyJoined = data.userId == socket.userId;
 
 			if (userAlreadyJoined) {
-				let message = socket.t("already joined on another client");
-				socket.emit(IOEvents.ALREADY_JOINED, { message: message });
-			} else {
-				socket.meetingId = meetingId;
-				socket.join(meetingId);
-
-				socket.emit(IOEvents.ROOM_JOIN, { data: data.offer });
-
-				socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER, {
-					data: data.user,
-				});
+				for (let client of clients ?? []) {
+					let userSocket = io.sockets.sockets.get(client);
+					if (
+						userSocket &&
+						userSocket.userId === socket.userId &&
+						userSocket.connected
+					) {
+						userSocket.leave(meetingId);
+						userSocket.meetingId = "";
+						userSocket.emit(IOEvents.CALL_ENDED, {
+							name: userSocket.user?.name,
+						});
+					}
+				}
 			}
+
+			socket.meetingId = meetingId;
+			socket.join(meetingId);
+			socket.emit(IOEvents.ROOM_JOIN, { data: data.offer });
+			socket.emit(IOEvents.JOINED_ROOM_AS_RECEIVER, {
+				data: data.user,
+			});
 		});
 	} catch (error) {
 		Logger.error(error);
