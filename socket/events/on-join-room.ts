@@ -52,6 +52,9 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 						});
 					}
 				}
+				socket.emit(IOEvents.CALL_ENDED, {
+					name: socket.user?.name,
+				});
 			} else {
 				socket.meetingId = meetingId;
 				socket.join(meetingId);
