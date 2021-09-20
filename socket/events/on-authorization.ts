@@ -20,10 +20,10 @@ import { TokenCore } from "../../sequelize/middlewares/auth/token";
 import { SocketData } from "../models";
 import { OnCreateRoom } from "./on-create-room";
 import _ from "lodash";
-import { OnNewAnswer } from "./on-new-answer";
-import { OnNewOffer } from "./on-new-offer";
 import { OnReconnecting } from "./on-reconnecting";
 import { SequelizeAttributes } from "../../sequelize/types";
+import { OnOffer } from "./on-offer";
+import { OnAnswer } from "./on-answer";
 
 async function authorizeUser(token: string) {
 	let user = await TokenCore.Verify(token);
@@ -49,7 +49,6 @@ export async function OnAuthorization(
 			socket.userId = user.userId;
 			socket.user = userData;
 
-			console.log(`USER ${socket.userId} AUTHORIZED`, userData);
 			socket.emit(IOEvents.AUTHORIZATION, {
 				success: true,
 				data: _.pick(userData, [
@@ -77,8 +76,8 @@ function attachEvents(io: Server, socket: Socket) {
 	socket.on(IOEvents.CREATE_ROOM, (res) => OnCreateRoom(io, socket, res));
 	socket.on(IOEvents.ROOM_JOIN, (res) => OnJoinRoom(io, socket, res));
 	socket.on(IOEvents.ANSWER_CALL, (res) => OnAnswerCall(socket, res));
-	socket.on(IOEvents.NEW_OFFER, (res) => OnNewOffer(socket, res));
-	socket.on(IOEvents.NEW_ANSWER, (res) => OnNewAnswer(socket, res));
+	socket.on(IOEvents.OFFER, (res) => OnOffer(socket, res));
+	socket.on(IOEvents.ANSWER, (res) => OnAnswer(socket, res));
 
 	socket.on(IOEvents.START_CALL, () => OnStartCall(socket));
 	socket.on(IOEvents.END_CALL, () => OnEndCall(io, socket));

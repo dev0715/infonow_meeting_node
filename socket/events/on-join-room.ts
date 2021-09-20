@@ -20,7 +20,7 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 		}
 
 		console.log("clients found", clients?.size);
-
+		// console.log("data", clients);
 		Redis.getInstance().get(meetingId, (err: any, reply: any) => {
 			// console.log("11111111111111111111111", err, reply);
 
@@ -34,8 +34,9 @@ export function OnJoinRoom(io: Server, socket: Socket, res: SocketData) {
 					message: socket.t("No meeting found"),
 				});
 			}
-			// console.log("22222222222222222222222", reply);
+
 			let data: SocketOffer = JSON.parse(reply);
+
 			if (!data.userId || !data.offer) {
 				throw new BadRequestError("No meeting found");
 			}

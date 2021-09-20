@@ -5,6 +5,7 @@ import { Logger, LogType } from "./sequelize/utils/logger";
 import * as App from "./app";
 import { sequelize } from "./sequelize";
 import { StartSocketServer } from "./socket";
+// import { StartSocketServer } from "./socket_v2";
 import { initLocalization } from "./sequelize/locales";
 
 require("source-map-support").install();
@@ -47,6 +48,7 @@ export async function Start(): Promise<boolean> {
 			LogType.Info,
 		];
 	} catch (err) {
+		console.log(err);
 		Logger.fatalError(
 			"* -------------------------------------------------------- *"
 		);
