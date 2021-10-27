@@ -33,7 +33,7 @@ export class MeetingUtils {
 				},
 			],
 			attributes: ["meetingId"],
-		});
+		});		
 
 		let options: any = {
 			include: [
@@ -46,6 +46,7 @@ export class MeetingUtils {
 			where: {
 				_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
 			},
+			order:[['scheduledAt','DESC']]
 		};
 
 		let meetings = await Meeting.findAllSafe<Meeting[]>(returns, options);
