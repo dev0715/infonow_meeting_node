@@ -11,6 +11,7 @@ import { a } from "../../../sequelize/locales";
 import { TokenCore } from "../../../sequelize/middlewares/auth/token";
 import { SequelizeAttributes } from "../../../sequelize/types";
 import { MeetingFeedbackUtils } from "../../services/meeting-feedback";
+import { CheckQueryPagingParams } from "../../utility";
 
 /**@urlParams  /:userId */
 export async function getAllUserMeetings(
@@ -19,10 +20,20 @@ export async function getAllUserMeetings(
 	next: NextFunction
 ) {
 	try {
+		const queryParams = CheckQueryPagingParams(req.query);
 		const meetings = await MeetingUtils.getAllUserMeetings(
-			req.params.userId
+			req.params.userId,
+			queryParams.offset,
+			queryParams.limit
 		);
-		if (meetings.length > 0) return DataResponse(res, 200, meetings);
+		
+		if (meetings[0].length > 0) {
+			let data = {
+				data: meetings[0],
+				count: meetings[1],
+			};
+			return DataResponse(res, 200, data);
+		}
 		throw new NotFoundError("No meeting found");
 	} catch (err) {
 		// Handle Exception
@@ -115,8 +126,9 @@ export async function acceptOrRejectOrRescheduleMeeting(
 			status: req.params.type,
 			userId: req.CurrentUser?.userId,
 		};
-		const updatedMeeting =
-			await MeetingUtils.acceptOrRejectOrRescheduleMeeting(meeting);
+		const updatedMeeting = await MeetingUtils.acceptOrRejectOrRescheduleMeeting(
+			meeting
+		);
 		if (updatedMeeting) return DataResponse(res, 200, updatedMeeting);
 		throw new NotFoundError("Failed to update meeting, try again");
 	} catch (err) {

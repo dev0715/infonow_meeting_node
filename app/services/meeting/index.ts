@@ -19,10 +19,9 @@ import { Op } from "sequelize";
 import moment from "moment";
 
 export class MeetingUtils {
-	static async getAllUserMeetings(
-		userId: string,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting[]> {
+
+	static async getAllUserMeetings(userId: string,	offset:number,limit:number,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<[Meeting[],number]> {
 		let meetingIds = await Participant.findAll({
 			include: [
 				{
@@ -46,18 +45,20 @@ export class MeetingUtils {
 			where: {
 				_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
 			},
-			order:[['scheduledAt','DESC']]
+			order:[['scheduledAt','DESC']],
+			limit:limit,
+            offset:offset
 		};
 
 		let meetings = await Meeting.findAllSafe<Meeting[]>(returns, options);
-
-		return meetings;
+		let count = await Meeting.count<Meeting>({where: {
+			_meetingId: { [Op.in]: meetingIds.map((m) => m.meetingId) },
+		},});
+		return [meetings,count];
 	}
 
-	static async getAllMeetingsOfUsers(
-		userIds: number[],
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting[]> {
+	static async getAllMeetingsOfUsers(userIds: number[],
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting[]> {
 		let meetingIds = await Participant.findAll({
 			include: [
 				{
@@ -88,10 +89,8 @@ export class MeetingUtils {
 		return meetings;
 	}
 
-	static async getMeeting(
-		meetingId: string | number,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | null> {
+	static async getMeeting(meetingId: string | number,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | null> {
 		let meetingIdType =
 			typeof meetingId === "number" ? "_meetingId" : "meetingId";
 
@@ -112,10 +111,8 @@ export class MeetingUtils {
 		return meeting;
 	}
 
-	static async getAdminMeeting(
-		userId: string,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | null> {
+	static async getAdminMeeting(userId: string,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | null> {
 		let meeting = await Meeting.findOneSafe<Meeting>(returns, {
 			include: [
 				{
@@ -145,10 +142,8 @@ export class MeetingUtils {
 		return await this.getMeeting(meeting.meetingId);
 	}
 
-	static async newMeeting(
-		meeting: NewMeetingSchemaType,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | null> {
+	static async newMeeting(meeting: NewMeetingSchemaType,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | null> {
 		try {
 			await NewMeetingSchema.validateAsync(meeting);
 
@@ -193,10 +188,8 @@ export class MeetingUtils {
 		}
 	}
 
-	static async getUsersMeetingsWithAdmin(
-		userId: number,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting[]> {
+	static async getUsersMeetingsWithAdmin(userId: number,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting[]> {
 		let meetings = await Meeting.findAll({
 			include: [
 				{
@@ -215,10 +208,8 @@ export class MeetingUtils {
 		return meetings;
 	}
 
-	static async newAdminMeeting(
-		meeting: NewAdminMeetingSchemaType,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | null> {
+	static async newAdminMeeting(meeting: NewAdminMeetingSchemaType,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | null> {
 		try {
 			await NewAdminMeetingSchema.validateAsync(meeting);
 			let userMeetings = await this.getUsersMeetingsWithAdmin(
@@ -261,10 +252,8 @@ export class MeetingUtils {
 		});
 	}
 
-	static async acceptOrRejectOrRescheduleMeeting(
-		meeting: any,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | null> {
+	static async acceptOrRejectOrRescheduleMeeting(meeting: any,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | null> {
 		let tempMeeting = await this.getMeeting(meeting.meetingId);
 		if (!tempMeeting) {
 			throw new BadRequestError(...a("No meeting found", ""));
@@ -318,10 +307,8 @@ export class MeetingUtils {
 		return await this.getMeeting(meeting.meetingId, returns);
 	}
 
-	static async cancelMeetingByUuid(
-		meetingId: string,
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting | any> {
+	static async cancelMeetingByUuid(meetingId: string,
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting | any> {
 		let tempMeeting = await this.getMeeting(meetingId);
 		if (!tempMeeting) {
 			throw new BadRequestError(...a("No meeting found", ""));
@@ -340,10 +327,8 @@ export class MeetingUtils {
 		return await this.getMeeting(meetingId, returns);
 	}
 
-	static async getMeetingDatesOfUsers(
-		userIds: number[],
-		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes
-	): Promise<Meeting[] | null> {
+	static async getMeetingDatesOfUsers(userIds: number[],
+		returns: SequelizeAttributes = SequelizeAttributes.WithoutIndexes): Promise<Meeting[] | null> {
 		let meetingIds = await Participant.findAll({
 			where: {
 				participantId: { [Op.in]: userIds },

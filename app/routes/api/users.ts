@@ -7,15 +7,8 @@ const router = express.Router();
 
 router.get("/authenticate", MeetingsCtrl.getMeetingToken);
 
-router.get(
-	`/:userId(${UUID_REGEX_ROUTE})/meetings`,
-	AuthorizeUtil.AuthorizeAdminOrSelf,
-	MeetingsCtrl.getAllUserMeetings
-);
+router.get(`/:userId(${UUID_REGEX_ROUTE})/meetings`,AuthorizeUtil.AuthorizeAdminOrSelf,MeetingsCtrl.getAllUserMeetings);
 
-router.get(
-	`/:userId(${UUID_REGEX_ROUTE})/admin-meeting`,
-	MeetingsCtrl.getAdminMeeting
-);
+router.get(`/:userId(${UUID_REGEX_ROUTE})/admin-meeting`,MeetingsCtrl.getAdminMeeting);
 
 export default router;
